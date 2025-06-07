@@ -13,7 +13,7 @@ app.use(bodyParser.json());
 
 // Connect to MongoDB
 mongoose
-  .connect("mongodb+srv://mongodb:aravindh123@messages.llh7c.mongodb.net/?retryWrites=true&w=majority&appName=Messages", { useNewUrlParser: true, useUnifiedTopology: true })
+  .connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log("MongoDB Connected"))
   .catch((err) => console.error("MongoDB Connection Error:", err));
 
