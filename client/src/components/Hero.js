@@ -7,9 +7,9 @@ export default function Hero() {
     const config = {
         subtitle: "I'm a Full-stack web developer",
         social: {
-            linkedin: 'https://in.linkedin.com/company/jvl-code',
+            linkedin: 'https://www.linkedin.com/in/aravindhprabu-full-stack-developer/',
             github: 'https://github.com/AravindhPrabu2005',
-            leetcode: 'https://leetcode.com/u/j3bV4EYfOa/',
+            leetcode: 'https://leetcode.com/u/aravindhprabu2005/',
             Medium: "https://medium.com/@aravindhprabu2005"
         }
     };
