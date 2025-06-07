@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import { SpeedInsights } from "@vercel/speed-insights/react";
+import { Analytics } from "@vercel/analytics/react";
 import "./App.css";
 import About from "./components/About";
 import Contact from "./components/Contact";
@@ -18,7 +19,7 @@ import Achievements from "./components/Achievements";
 
 function LayoutWrapper() {
   const location = useLocation();
-  const hideHeaderFooter = 
+  const hideHeaderFooter =
     location.pathname === "/allprojects" ||
     location.pathname === "/achivements" ||
     location.pathname === "/certificates";
@@ -27,7 +28,6 @@ function LayoutWrapper() {
     <div className="App">
       <ScrollToTop />
       {!hideHeaderFooter && <Header />}
-
       <Routes>
         <Route
           path="/"
@@ -48,7 +48,6 @@ function LayoutWrapper() {
         <Route path="/certificates" element={<Certifications />} />
         <Route path="/achivements" element={<Achievements />} />
       </Routes>
-
       {!hideHeaderFooter && <Footer />}
       <SpeedInsights />
     </div>
@@ -59,6 +58,7 @@ function App() {
   return (
     <Router>
       <LayoutWrapper />
+      <Analytics /> {/* ← This is required */}
     </Router>
   );
 }
