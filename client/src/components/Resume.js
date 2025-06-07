@@ -1,4 +1,4 @@
-import ResumeImg from '../assets/resume.jpg';
+import ResumeImg from '../assets/resume.png';
 
 export default function Resume() {
     return (
@@ -11,7 +11,7 @@ export default function Resume() {
                     <h1 className="text-4xl border-b-4 border-secondary mb-5 w-[140px] font-bold">Resume</h1>
                     <p className="pb-5">
                         You can view my resume {" "}
-                        <a className="btn border-4 border-black ml-3" download>
+                        <a className="btn border-4 border-black ml-3" href="/Aravindh Prabu Resume.pdf" download>
                             Download
                         </a>
                     </p>
@@ -21,4 +21,4 @@ export default function Resume() {
     );
 }
 
-// href="/Aravindh Prabu Resume.pdf"
+
