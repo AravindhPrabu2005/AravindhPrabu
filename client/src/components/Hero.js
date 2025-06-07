@@ -1,6 +1,7 @@
 import HeroImg from '../assets/hero.png';
 import { AiOutlineLinkedin, AiOutlineGithub } from "react-icons/ai";
 import { SiLeetcode } from "react-icons/si";
+import { SiMedium } from "react-icons/si";
 
 export default function Hero() {
     const config = {
@@ -8,7 +9,8 @@ export default function Hero() {
         social: {
             linkedin: 'https://in.linkedin.com/company/jvl-code',
             github: 'https://github.com/AravindhPrabu2005',
-            leetcode: 'https://leetcode.com/u/j3bV4EYfOa/'
+            leetcode: 'https://leetcode.com/u/j3bV4EYfOa/',
+            Medium: "https://medium.com/@aravindhprabu2005"
         }
     };
 
@@ -28,6 +30,9 @@ export default function Hero() {
                     </a>
                     <a href={config.social.leetcode} className="hover:text-white">
                         <SiLeetcode size={40} />
+                    </a>
+                    <a href={config.social.Medium} className="hover:text-white">
+                        <SiMedium size={40} />
                     </a>
                 </div>
             </div>
