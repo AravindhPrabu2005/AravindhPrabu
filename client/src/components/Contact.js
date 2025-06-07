@@ -1,4 +1,5 @@
 import { useState } from "react";
+import axiosInstance from "./axiosInstance";
 
 export default function Contact() {
     const [formData, setFormData] = useState({ name: "", email: "", message: "" });
@@ -13,13 +14,11 @@ export default function Contact() {
         setStatus("Sending...");
 
         try {
-            const response = await fetch("http://localhost:5000/api/contact", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(formData),
+            const response = await axiosInstance.post("/api/contact", formData, {
+                headers: { "Content-Type": "application/json" }
             });
 
-            if (response.ok) {
+            if (response.status === 201) {
                 setStatus("Message sent successfully!");
                 setFormData({ name: "", email: "", message: "" });
             } else {

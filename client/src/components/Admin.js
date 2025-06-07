@@ -1,21 +1,21 @@
 import { useEffect, useState } from "react";
+import axiosInstance from "./axiosInstance";
 
 export default function Admin() {
     const [messages, setMessages] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetch("http://localhost:5000/api/messages")
-            .then((response) => response.json())
-            .then((data) => {
-                setMessages(data);
-                setLoading(false);
-            })
-            .catch((error) => {
-                console.error("Error fetching messages:", error);
-                setLoading(false);
-            });
-    }, []);
+    axiosInstance.get("/api/messages")
+        .then((response) => {
+            setMessages(response.data);
+            setLoading(false);
+        })
+        .catch((error) => {
+            console.error("Error fetching messages:", error);
+            setLoading(false);
+        });
+}, []);
 
     return (
         <section className="flex flex-col px-5 py-10">
