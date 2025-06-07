@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 import "./App.css";
 import About from "./components/About";
 import Contact from "./components/Contact";
@@ -49,6 +50,7 @@ function LayoutWrapper() {
       </Routes>
 
       {!hideHeaderFooter && <Footer />}
+      <SpeedInsights />
     </div>
   );
 }
