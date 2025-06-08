@@ -4,13 +4,13 @@ const certifications = [
   {
     title: 'The Complete Full-Stack Web Development Bootcamp',
     provider: 'Udemy',
-    image: '/full stack development.png',
+    image: '/Certifications/full stack development.png',
     description: 'A comprehensive course covering both frontend and backend technologies, including HTML, CSS, JavaScript, React, Node.js, and more.'
   },
   {
     title: 'Software Development Lifecycle Fundamentals',
     provider: 'Great Learning',
-    image: '/SDLC principles.jpg',
+    image: '/Certifications/SDLC principles.jpg',
     description: 'An introduction to the software development lifecycle, covering methodologies, processes, and best practices for software development.'
   }
 ];

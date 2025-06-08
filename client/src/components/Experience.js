@@ -7,7 +7,7 @@ import { Link } from 'react-router-dom';
 const experiences = [
   {
     role: "FREELANCING | FRONT-END DEVELOPER",
-    logo: "/freelancing.png",
+    logo: "/Experience/freelancing.png",
     duration: "July 2024 – Sep 2024",
     location: "Coimbatore, India",
     points: [
@@ -18,7 +18,7 @@ const experiences = [
   },
   {
     role: "INTERNSHIP | RBG.ai",
-    logo: "/RBG.jpeg",
+    logo: "/Experience/RBG.jpeg",
     duration: "Dec 2024 – Jan 2025",
     location: "Coimbatore, India",
     points: [

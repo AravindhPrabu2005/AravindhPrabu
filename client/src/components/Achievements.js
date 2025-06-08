@@ -2,53 +2,109 @@ import React from 'react';
 
 const achievements = [
   {
-    title: 'SRCAS Hackathon 2024',
+    title: "TechXcelerate 2025",
+    position: '2nd Place',
+    description: 'Built a full-sack decentralized energy trading platform using MERN and Coinbase payment API. Presented a working prototype to the jury.',
+    certificate: '/Hackathons and Achivements/TechXcelerate.jpg',
+    type: 1
+  },
+  {
+    title: "L&T Hack Appsters '25",
+    position: '1st Place',
+    description: 'Built a full-sack decentralized energy trading platform using MERN and Coinbase payment API. Presented a working prototype to the jury.',
+    certificate: '/Hackathons and Achivements/L&T Hack Appsters.jpg',
+    type: 1
+  },
+  {
+    title: "SRCAS Hackathon 2024",
     position: 'Finalist',
-    description: 'Built a full-stack decentralized energy trading platform using MERN and Coinbase payment API. Presented a working prototype to the jury.',
-    certificate: '/certificates/srcas-hackathon.png',
-    link: 'https://example.com/srcas-certificate'
+    description: 'Built a full-sack decentralized energy trading platform using MERN and Coinbase payment API. Presented a working prototype to the jury.',
+    certificate: '/Hackathons and Achivements/SRCAS Hackathon.jpg',
+    type: 1
   },
   {
-    title: 'WOW Tamil Nadu - GDSE',
-    position: 'Participant',
-    description: 'Represented college in the GDSE WOW Tamil Nadu state-level tech event. Contributed to problem-solving and team-building exercises.',
-    certificate: '/certificates/wow-tn.png',
-    link: 'https://example.com/wowtn-certificate'
+    title: "SREC INNOVATE 2024",
+    position: 'The Best Innovation Award',
+    description: 'Built a full-sack decentralized energy trading platform using MERN and Coinbase payment API. Presented a working prototype to the jury.',
+    certificate: '/Hackathons and Achivements/Best Innovation award.jpg',
+    type: 2
   },
   {
-    title: 'Datathon Challenge by SmartInternz',
-    position: 'Top 5% Performer',
-    description: 'Cleaned large datasets, applied ML techniques and built data dashboards using Python and PowerBI.',
-    certificate: '/certificates/datathon.png',
-    link: 'https://example.com/datathon-certificate'
-  }
+    title: "ICMRSH 2024 - International Conference",
+    position: 'Best Paper Award',
+    description: 'Built a full-sack decentralized energy trading platform using MERN and Coinbase payment API. Presented a working prototype to the jury.',
+    certificate: '/Hackathons and Achivements/Best Paper Award.jpg',
+    type: 2
+  },
+  {
+    title: "Design Thinking Challenge 6.0",
+    position: '2nd Place',
+    description: 'Built a full-sack decentralized energy trading platform using MERN and Coinbase payment API. Presented a working prototype to the jury.',
+    certificate: '/Hackathons and Achivements/Best design Challange.jpg',
+    type: 2
+  },
+  {
+    title: "Tech Sprint Phase-1",
+    position: 'Top Performer',
+    description: 'Built a full-sack decentralized energy trading platform using MERN and Coinbase payment API. Presented a working prototype to the jury.',
+    certificate: '/Hackathons and Achivements/Tech Sprint.jpg',
+    type: 2
+  },
+  {
+    title: "Curio Prompt cynosure 2k23",
+    position: '2nd Place',
+    description: 'Built a full-sack decentralized energy trading platform using MERN and Coinbase payment API. Presented a working prototype to the jury.',
+    certificate: '/Hackathons and Achivements/Curio Prompt - kgisl.jpg',
+    type: 2
+  },
+  {
+    title: "Web Design cynosure 2k23",
+    position: '2nd Place',
+    description: 'Built a full-sack decentralized energy trading platform using MERN and Coinbase payment API. Presented a working prototype to the jury.',
+    certificate: '/Hackathons and Achivements/web design - kgisl.jpg',
+    type: 2
+  },
+  {
+    title: "Q'CIPHER quiz competition",
+    position: '2nd Place',
+    description: 'Built a full-sack decentralized energy trading platform using MERN and Coinbase payment API. Presented a working prototype to the jury.',
+    certificate: '/Hackathons and Achivements/Q CIPHER.jpg',
+    type: 2
+  },
 ];
 
+
+
 const Achievements = () => {
+  const hackathons = achievements.filter(item => item.type === 1);
+  const otherAchievements = achievements.filter(item => item.type === 2);
+
+  const renderCards = (items) => (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-6xl px-4">
+      {items.map((item, index) => (
+        <div key={index} className="bg-white text-black rounded-xl shadow-md overflow-hidden w-full max-w-[300px] mx-auto">
+          <div className="w-full max-h-[300px] bg-gray-100 flex justify-center items-center">
+            <img src={item.certificate} alt={item.title} className="w-full h-auto object-contain" />
+          </div>
+          <div className="p-4">
+            <h2 className="text-lg font-semibold text-purple-700">{item.title}</h2>
+            <p className="text-sm text-blue-800 font-semibold">{item.position}</p>
+            <p className="mt-2 text-sm text-gray-700">{item.description}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
   return (
     <div className="flex flex-col min-h-screen w-full py-20 px-5 items-center bg-primary text-white">
-      <h1 className="text-4xl font-bold mb-10 text-white">My Achievements</h1>
+      <h1 className="text-4xl font-bold mb-10 text-white">Achievements and Participation</h1>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-6xl px-4">
-        {achievements.map((item, index) => (
-          <div key={index} className="bg-white text-black rounded-xl shadow-md overflow-hidden w-full max-w-[300px] mx-auto">
-            <img src={item.certificate} alt={item.title} className="w-full h-[160px] object-cover" />
-            <div className="p-4">
-              <h2 className="text-lg font-semibold text-purple-700">{item.title}</h2>
-              <p className="text-sm text-blue-800 font-semibold">{item.position}</p>
-              <p className="mt-2 text-sm text-gray-700">{item.description}</p>
-              <a
-                href={item.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-block mt-4 px-3 py-1.5 text-sm bg-black text-white rounded-md"
-              >
-                View Certificate
-              </a>
-            </div>
-          </div>
-        ))}
-      </div>
+      <h2 className="text-2xl font-semibold mb-6 mt-4">Hackathons</h2>
+      {renderCards(hackathons)}
+
+      <h2 className="text-2xl font-semibold mb-6 mt-16">Other Achievements</h2>
+      {renderCards(otherAchievements)}
     </div>
   );
 };
