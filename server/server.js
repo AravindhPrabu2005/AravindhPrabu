@@ -7,8 +7,6 @@ const nodemailer = require("nodemailer");
 
 const app = express();
 const PORT = 5000;
-console.log("Email user:", process.env.EMAIL_USER);
-console.log("Email user:", process.env.EMAIL_PASS);
 app.use(cors());
 app.use(bodyParser.json());
 
