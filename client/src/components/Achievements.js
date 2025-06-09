@@ -19,7 +19,7 @@ const achievements = [
     title: "SRCAS Hackathon 2024",
     position: 'Finalist',
     description: 'Built a full-sack decentralized energy trading platform using MERN and Coinbase payment API. Presented a working prototype to the jury.',
-    certificate: '/Hackathons and Achivements/SRCAS Hackathon.jpg',
+    certificate: '/Hackathons and Achivements/SRCAS hackathon.jpg',
     type: 1
   },
   {
@@ -100,10 +100,10 @@ const Achievements = () => {
     <div className="flex flex-col min-h-screen w-full py-20 px-5 items-center bg-primary text-white">
       <h1 className="text-4xl font-bold mb-10 text-white">Achievements and Participation</h1>
 
-      <h2 className="text-2xl font-semibold mb-6 mt-4">Hackathons</h2>
+      <h2 className="text-2xl font-semibold underline mb-6 mt-4">Hackathons</h2>
       {renderCards(hackathons)}
 
-      <h2 className="text-2xl font-semibold mb-6 mt-16">Other Achievements</h2>
+      <h2 className="text-2xl font-semibold underline mb-6 mt-16">Other Achievements</h2>
       {renderCards(otherAchievements)}
     </div>
   );
