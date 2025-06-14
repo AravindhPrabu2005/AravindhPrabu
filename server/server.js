@@ -147,7 +147,7 @@ Aravindh Prabu`,
         attachments: [
           {
             filename: "Aravindh Prabu Resume.pdf",
-            path: __dirname + "/public/Aravindh Prabu Resume.pdf"
+            path: path.join(__dirname, "public", "Aravindh Prabu Resume.pdf")
           }
         ]
       }
