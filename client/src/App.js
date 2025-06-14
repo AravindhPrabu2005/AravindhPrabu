@@ -16,6 +16,7 @@ import Skills from "./components/Skills";
 import Experience from "./components/Experience";
 import Certifications from "./components/Certifications";
 import Achievements from "./components/Achievements";
+import AdminResumePage from "./components/Adminresume";
 
 function LayoutWrapper() {
   const location = useLocation();
@@ -47,6 +48,7 @@ function LayoutWrapper() {
         <Route path="/allprojects" element={<Allprojects />} />
         <Route path="/certificates" element={<Certifications />} />
         <Route path="/achivements" element={<Achievements />} />
+        <Route path='/adminresume' element={<AdminResumePage />} />
       </Routes>
       {!hideHeaderFooter && <Footer />}
       <SpeedInsights />
