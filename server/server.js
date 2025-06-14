@@ -89,10 +89,10 @@ app.post("/api/send-download-link", async (req, res) => {
     await newEmailEntry.save();
 
     const mailOptions = {
-  from: process.env.EMAIL_USER,
-  to: process.env.EMAIL_USER,
-  subject: "Resume Request Notification",
-  html: `
+      from: process.env.EMAIL_USER,
+      to: process.env.EMAIL_USER,
+      subject: "Resume Request Notification",
+      html: `
     <p>This email (<strong>${email}</strong>) has requested your resume.</p>
     <p>
       <a href="http://aravindhprabu.me/adminresume" style="display:inline-block;padding:10px 15px;background-color:#4CAF50;color:white;text-decoration:none;border-radius:4px;">
@@ -100,7 +100,7 @@ app.post("/api/send-download-link", async (req, res) => {
       </a>
     </p>
   `
-}
+    }
 
     await transporter.sendMail(mailOptions);
 
@@ -147,7 +147,7 @@ Aravindh Prabu`,
         attachments: [
           {
             filename: "Aravindh Prabu Resume.pdf",
-            path: "C:\\Users\\aravi\\OneDrive\\Desktop\\Main\\My portfolio\\server\\public\\Aravindh Prabu Resume.pdf"
+            path: __dirname + "/public/Aravindh Prabu Resume.pdf"
           }
         ]
       }
