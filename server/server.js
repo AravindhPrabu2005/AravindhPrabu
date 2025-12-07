@@ -5,9 +5,10 @@ const cors = require("cors");
 const bodyParser = require("body-parser");
 const nodemailer = require("nodemailer");
 const path = require("path");
+const serverless = require("serverless-http")
 
 const app = express();
-const PORT = 5000;
+// const PORT = 5000;
 app.use(cors());
 app.use(bodyParser.json());
 
@@ -35,6 +36,9 @@ const transporter = nodemailer.createTransport({
 });
 
 
+app.get("/test",(req,res)=>{
+  res.send("I am working da!");
+});
 
 
 
@@ -167,4 +171,5 @@ Aravindh Prabu`,
 
 
 
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+// app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+module.exports.handler = serverless(app);
