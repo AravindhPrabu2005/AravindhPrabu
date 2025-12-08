@@ -37,7 +37,7 @@ const transporter = nodemailer.createTransport({
 
 
 app.get("/test",(req,res)=>{
-  res.send("I am working da!");
+  res.send("Hello world!");
 });
 
 
