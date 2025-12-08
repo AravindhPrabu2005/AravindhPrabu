@@ -22,10 +22,10 @@ jobs:
         run: npm install
 
       - name: Create Deployment Package
-        run: zip -r deployment.zip .  
+        run: zip -r deployment.zip .
 
       - name: Deploy to Lambda
-        uses: appleboy/lambda-action@v1.2.0
+        uses: appleboy/lambda-action@v1.0.0
         with:
           aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
