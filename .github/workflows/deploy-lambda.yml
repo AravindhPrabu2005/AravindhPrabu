@@ -13,16 +13,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18
-
-      - name: Install dependencies
+      - name: Install backend dependencies
+        working-directory: ./server
         run: npm install
 
-      - name: Zip Lambda package
-        run: zip -r deployment.zip . 
+      - name: Create deployment zip
+        working-directory: ./server
+        run: zip -r ../deployment.zip .
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
