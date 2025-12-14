@@ -1,9 +1,9 @@
 import axios from 'axios';
 
 const axiosInstance = axios.create({
-    baseURL: 'https://wheurn6wyf.execute-api.eu-north-1.amazonaws.com/dev',  
+    baseURL: 'https://dzc0ibd8dc.execute-api.ap-south-1.amazonaws.com/dev',  
 });
-// render url : https://aravindhprabu-portfolio.onrender.com
-// aws url : https://wheurn6wyf.execute-api.eu-north-1.amazonaws.com/dev
+// aws url : https://dzc0ibd8dc.execute-api.ap-south-1.amazonaws.com/dev
+// local url: http://localhost:5000
 
 export default axiosInstance
