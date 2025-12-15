@@ -1,175 +1,165 @@
-require("dotenv").config();
-const express = require("express");
-const mongoose = require("mongoose");
-const cors = require("cors");
-const bodyParser = require("body-parser");
-const nodemailer = require("nodemailer");
-const path = require("path");
+require("dotenv").config()
+const express = require("express")
+const mongoose = require("mongoose")
+const cors = require("cors")
+const bodyParser = require("body-parser")
+const path = require("path")
 const serverless = require("serverless-http")
 
-const app = express();
 const PORT = 5000;
-app.use(cors());
-app.use(bodyParser.json());
+
+const { SESClient, SendEmailCommand, SendRawEmailCommand } = require("@aws-sdk/client-ses")
+
+const app = express()
+app.use(cors())
+app.use(bodyParser.json())
 
 mongoose
-  .connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+  .connect(process.env.MONGODB_URI)
   .then(() => console.log("MongoDB Connected"))
-  .catch((err) => console.error("MongoDB Connection Error:", err));
+  .catch(err => console.error("MongoDB Error:", err.message))
 
-const contactSchema = new mongoose.Schema({
+const ses = new SESClient({
+  region: process.env.AWS_REGION,
+  credentials: {
+    accessKeyId: process.env.SES_ACCESS_KEY,
+    secretAccessKey: process.env.SES_SECRET_KEY
+  }
+})
+
+const sendTextEmail = async (subject, body, to) => {
+  const command = new SendEmailCommand({
+    Source: process.env.SES_FROM_EMAIL,
+    Destination: { ToAddresses: [to] },
+    Message: {
+      Subject: { Data: subject },
+      Body: { Text: { Data: body } }
+    }
+  })
+  return ses.send(command)
+}
+
+const sendResumeEmail = async (toEmail, fileBuffer) => {
+  const boundary = "NextPart"
+
+  const rawMessage =
+`From: ${process.env.SES_FROM_EMAIL}
+To: ${toEmail}
+Subject: Requested Resume - Aravindh Prabu
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="${boundary}"
+
+--${boundary}
+Content-Type: text/plain; charset="UTF-8"
+
+Dear Candidate,
+
+Thank you for your interest in my profile. Please find my resume attached.
+
+Best regards,
+Aravindh Prabu
+
+--${boundary}
+Content-Type: application/pdf; name="Aravindh Prabu Resume.pdf"
+Content-Disposition: attachment; filename="Aravindh Prabu Resume.pdf"
+Content-Transfer-Encoding: base64
+
+${fileBuffer.toString("base64")}
+--${boundary}--`
+
+  const command = new SendRawEmailCommand({
+    RawMessage: { Data: Buffer.from(rawMessage) }
+  })
+
+  return ses.send(command)
+}
+
+const Contact = mongoose.model("Contact", new mongoose.Schema({
   name: String,
   email: String,
-  message: String,
-});
+  message: String
+}))
 
-const Contact = mongoose.model("Contact", contactSchema);
+const ResumeEmail = mongoose.model("ResumeEmail", new mongoose.Schema({
+  email: { type: String, required: true },
+  sentAt: { type: Date, default: Date.now },
+  status: { type: String, enum: ["pending", "approved", "declined"], default: "pending" }
+}))
 
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
-
-
-app.get("/test",(req,res)=>{
-  res.send("I am here da!");
-});
-
-
+app.get("/test", (req, res) => {
+  res.send("I am here da!")
+})
 
 app.post("/api/contact", async (req, res) => {
   try {
-    const { name, email, message } = req.body;
-    const newContact = new Contact({ name, email, message });
-    await newContact.save();
+    const { name, email, message } = req.body
+    await new Contact({ name, email, message }).save()
 
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: process.env.EMAIL_USER,
-      subject: `New Contact Message from ${name}`,
-      text: `Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`,
-    };
+    res.status(201).json({ message: "Message saved" })
 
-    await transporter.sendMail(mailOptions);
+    sendTextEmail(
+      `New Contact Message from ${name}`,
+      `Name: ${name}\nEmail: ${email}\n\n${message}`,
+      process.env.SES_FROM_EMAIL
+    ).catch(err => console.error("SES Error:", err.message))
 
-    res.status(201).json({ success: true, message: "Message stored and email sent!" });
-  } catch (error) {
-    console.error("Error:", error);
-    res.status(500).json({ success: false, error: "Internal Server Error" });
+  } catch (err) {
+    console.error("Contact API Error:", err.message)
+    res.status(500).json({ message: "Internal server error" })
   }
-});
-
-app.get("/api/messages", async (req, res) => {
-  try {
-    const messages = await Contact.find();
-    res.json(messages);
-  } catch (error) {
-    console.error("Error fetching messages:", error);
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-});
-
-const resumeEmailSchema = new mongoose.Schema({
-  email: { type: String, required: true },
-  sentAt: { type: Date, default: Date.now },
-  status: { type: String, enum: ["pending", "approved", "declined"], default: "pending" },
 })
-
-
-const ResumeEmail = mongoose.model("ResumeEmail", resumeEmailSchema);
 
 app.post("/api/send-download-link", async (req, res) => {
-  const { email } = req.body;
-  if (!email) {
-    return res.status(400).json({ message: "Email is required" });
-  }
+  const { email } = req.body
+  if (!email) return res.status(400).json({ message: "Email required" })
 
   try {
-    const newEmailEntry = new ResumeEmail({ email });
-    await newEmailEntry.save();
+    await new ResumeEmail({ email }).save()
+    res.json({ message: "Resume request saved" })
 
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: process.env.EMAIL_USER,
-      subject: "Resume Request Notification",
-      html: `
-    <p>This email (<strong>${email}</strong>) has requested your resume.</p>
-    <p>
-      <a href="http://aravindhprabu.me/adminresume" style="display:inline-block;padding:10px 15px;background-color:#4CAF50;color:white;text-decoration:none;border-radius:4px;">
-        Review and Approve
-      </a>
-    </p>
-  `
-    }
+    sendTextEmail(
+      "Resume Request Notification",
+      `Resume requested by: ${email}\nReview at: http://aravindhprabu.me/adminresume`,
+      process.env.SES_FROM_EMAIL
+    ).catch(err => console.error("SES Error:", err.message))
 
-    await transporter.sendMail(mailOptions);
-
-    res.status(200).json({ message: "The resume has been requested" });
-  } catch (error) {
-    console.error("Error requesting resume:", error);
-    res.status(500).json({ message: "Failed to process request" });
-  }
-});
-
-
-app.get("/api/resume-emails", async (req, res) => {
-  try {
-    const emails = await ResumeEmail.find();
-    res.json(emails);
-  } catch (error) {
-    console.error("Error fetching resume emails:", error);
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-});
-
-app.put("/api/resume-emails/:id", async (req, res) => {
-  const { id } = req.params
-  const { status } = req.body
-
-  try {
-    const updatedEmail = await ResumeEmail.findByIdAndUpdate(id, { status }, { new: true })
-
-    if (status === "approved") {
-      const recipientEmail = updatedEmail.email
-
-      const mailOptions = {
-        from: process.env.EMAIL_USER,
-        to: recipientEmail,
-        subject: "Requested Resume - Aravindh Prabu",
-        text: `Dear Candidate,
-
-Thank you for your interest in my professional profile. As requested, I have attached my resume to this email.
-
-Please feel free to reach out if you have any questions or would like to connect further.
-
-Best regards,  
-Aravindh Prabu`,
-        attachments: [
-          {
-            filename: "Aravindh Prabu Resume.pdf",
-            path: path.join(__dirname, "public", "Aravindh Prabu Resume.pdf")
-          }
-        ]
-      }
-
-      await transporter.sendMail(mailOptions)
-    }
-
-    res.json(updatedEmail)
-  } catch (error) {
-    console.error("Update error:", error)
-    res.status(500).json({ error: "Internal Server Error" })
+  } catch (err) {
+    console.error("Resume Request Error:", err.message)
+    res.status(500).json({ message: "Internal server error" })
   }
 })
 
+app.get("/api/resume-emails", async (req, res) => {
+  const emails = await ResumeEmail.find()
+  res.json(emails)
+})
 
+app.put("/api/resume-emails/:id", async (req, res) => {
+  try {
+    const { status } = req.body
+    const updated = await ResumeEmail.findByIdAndUpdate(
+      req.params.id,
+      { status },
+      { new: true }
+    )
 
+    if (status === "approved") {
+      const fileBuffer = require("fs").readFileSync(
+        path.join(__dirname, "public", "Aravindh Prabu Resume.pdf")
+      )
 
+      sendResumeEmail(updated.email, fileBuffer)
+        .catch(err => console.error("SES Resume Error:", err.message))
+    }
 
-// app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-module.exports.handler = serverless(app);
+    res.json(updated)
+  } catch (err) {
+    console.error("Approval Error:", err.message)
+    res.status(500).json({ message: "Internal server error" })
+  }
+})
+
+module.exports.handler = serverless(app)
+// app.listen(PORT,()=>{
+//   console.log(`Server is running on ${PORT}`);
+// })
