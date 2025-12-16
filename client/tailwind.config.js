@@ -5,15 +5,33 @@ module.exports = {
   ],
   theme: {
     extend: {
-      borderColor :{
-        'primary' : 'rgb(85 81 227)',
-        'secondary' : '#2b2d77',
-      }
+      borderColor: {
+        'primary': 'rgb(85 81 227)',
+        'secondary': '#2b2d77',
+      },
+      animation: {
+        'blob': 'blob 7s infinite',
+      },
+      keyframes: {
+        blob: {
+          '0%': {
+            transform: 'translate(0px, 0px) scale(1)',
+          },
+          '33%': {
+            transform: 'translate(30px, -50px) scale(1.1)',
+          },
+          '66%': {
+            transform: 'translate(-20px, 20px) scale(0.9)',
+          },
+          '100%': {
+            transform: 'translate(0px, 0px) scale(1)',
+          },
+        },
+      },
     },
-    fontFamily : {
-      'hero-font' : 'Sriracha'
+    fontFamily: {
+      'hero-font': 'Sriracha'
     }
   },
   plugins: [],
 }
-

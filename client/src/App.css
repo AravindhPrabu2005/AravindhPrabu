@@ -33,3 +33,291 @@ header ul li {
 html {
     scroll-behavior: smooth;
 }
+
+/* Horizontal Scroll Hint Animation */
+@keyframes scroll-hint {
+  0%, 100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  50% {
+    transform: translateX(8px);
+    opacity: 0.6;
+  }
+}
+
+.scroll-hint-arrow {
+  animation: scroll-hint 2s ease-in-out infinite;
+}
+
+/* Hide scrollbar but keep functionality */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Shimmer effect for button */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%) rotate(45deg);
+  }
+  100% {
+    transform: translateX(100%) rotate(45deg);
+  }
+}
+
+.shimmer-effect {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  animation: shimmer 3s infinite;
+}
+
+/* Pulsing ring around button */
+@keyframes pulse-ring {
+  0% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+
+.pulse-ring {
+  position: absolute;
+  inset: -4px;
+  border: 2px solid rgba(168, 85, 247, 0.6);
+  border-radius: 9999px;
+  animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  pointer-events: none;
+}
+
+/* Subtle glow pulse */
+@keyframes glow-pulse {
+  0%, 100% {
+    box-shadow: 0 10px 15px -3px rgba(168, 85, 247, 0.3);
+  }
+  50% {
+    box-shadow: 0 20px 25px -5px rgba(168, 85, 247, 0.5);
+  }
+}
+
+.pulse-glow {
+  animation: glow-pulse 3s ease-in-out infinite;
+}
+
+/* Arrow bounce */
+@keyframes bounce-arrow {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(4px);
+  }
+}
+
+.bounce-arrow {
+  animation: bounce-arrow 1.5s ease-in-out infinite;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.2s ease-out;
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+header ul li {
+    @apply px-2;
+}
+
+.bg-primary {
+    background: rgb(85 81 227);
+}
+
+.bg-secondary {
+    background: #2b2d77;
+}
+
+.mobile-nav {
+    @apply fixed top-10 left-0 bg-gray-800 w-full h-1/4  ;
+}
+
+.mobile-nav li {
+    @apply w-full h-full text-center border-b-2 ;
+}
+
+.project-desc {
+    @apply absolute left-0 right-0 bottom-0 top-0 bg-secondary opacity-0 duration-500 hover:opacity-100;
+}
+
+.btn {
+    @apply bg-primary px-5 py-2 font-bold hover:border-2 border-white rounded;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+/* Horizontal Scroll Hint Animation */
+@keyframes scroll-hint {
+  0%, 100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  50% {
+    transform: translateX(8px);
+    opacity: 0.6;
+  }
+}
+
+.scroll-hint-arrow {
+  animation: scroll-hint 2s ease-in-out infinite;
+}
+
+/* Hide scrollbar but keep functionality */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Shimmer effect for button */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%) rotate(45deg);
+  }
+  100% {
+    transform: translateX(100%) rotate(45deg);
+  }
+}
+
+.shimmer-effect {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  animation: shimmer 3s infinite;
+}
+
+/* Pulsing ring around button */
+@keyframes pulse-ring {
+  0% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+
+.pulse-ring {
+  position: absolute;
+  inset: -4px;
+  border: 2px solid rgba(168, 85, 247, 0.6);
+  border-radius: 9999px;
+  animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  pointer-events: none;
+}
+
+/* Subtle glow pulse */
+@keyframes glow-pulse {
+  0%, 100% {
+    box-shadow: 0 10px 15px -3px rgba(168, 85, 247, 0.3);
+  }
+  50% {
+    box-shadow: 0 20px 25px -5px rgba(168, 85, 247, 0.5);
+  }
+}
+
+.pulse-glow {
+  animation: glow-pulse 3s ease-in-out infinite;
+}
+
+/* Arrow bounce */
+@keyframes bounce-arrow {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(4px);
+  }
+}
+
+.bounce-arrow {
+  animation: bounce-arrow 1.5s ease-in-out infinite;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.2s ease-out;
+}
+
+/* Animated blob animation for background elements */
+@keyframes blob {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+}
+
+.animate-blob {
+  animation: blob 7s infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
