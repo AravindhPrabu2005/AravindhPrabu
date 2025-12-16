@@ -5,17 +5,30 @@ const cors = require("cors");
 const bodyParser = require("body-parser");
 const nodemailer = require("nodemailer");
 const path = require("path");
-const serverless = require("serverless-http")
+const serverless = require("serverless-http");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(bodyParser.json());
 
+// Log environment variables status (without exposing values)
+console.log("=== Environment Variables Check ===");
+console.log("MONGODB_URI:", process.env.MONGODB_URI ? "✓ Set" : "✗ Missing");
+console.log("EMAIL_USER:", process.env.EMAIL_USER ? "✓ Set" : "✗ Missing");
+console.log("EMAIL_PASS:", process.env.EMAIL_PASS ? "✓ Set" : "✗ Missing");
+console.log("PORT:", PORT);
+console.log("===================================");
+
 mongoose
   .connect(process.env.MONGODB_URI)
-  .then(() => console.log("MongoDB Connected"))
-  .catch((err) => console.error("MongoDB Connection Error:", err));
+  .then(() => console.log("✓ MongoDB Connected Successfully"))
+  .catch((err) => {
+    console.error("✗ MongoDB Connection Error:");
+    console.error("Error Message:", err.message);
+    console.error("Error Code:", err.code);
+    console.error("Full Error:", err);
+  });
 
 const contactSchema = new mongoose.Schema({
   name: String,
@@ -25,29 +38,50 @@ const contactSchema = new mongoose.Schema({
 
 const Contact = mongoose.model("Contact", contactSchema);
 
+// Enable nodemailer debug mode
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
   port: 587,
   secure: false,
+  debug: true, // Enable debug output
+  logger: true, // Log information to console
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
 });
 
+// Verify transporter configuration on startup
+transporter.verify(function (error, success) {
+  if (error) {
+    console.error("✗ Nodemailer Configuration Error:");
+    console.error("Error Message:", error.message);
+    console.error("Error Code:", error.code);
+    console.error("Error Command:", error.command);
+    console.error("Full Error:", error);
+  } else {
+    console.log("✓ Nodemailer is ready to send emails");
+  }
+});
 
-app.get("/test",(req,res)=>{
+app.get("/test", (req, res) => {
   res.send("I am here da!");
 });
 
-
-
 app.post("/api/contact", async (req, res) => {
+  console.log("\n=== Contact Form Submission ===");
+  console.log("Timestamp:", new Date().toISOString());
+  console.log("Request Body:", req.body);
+  
   try {
     const { name, email, message } = req.body;
+    
+    // Save to database
     const newContact = new Contact({ name, email, message });
     await newContact.save();
+    console.log("✓ Contact saved to MongoDB");
 
+    // Prepare email
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: process.env.EMAIL_USER,
@@ -55,21 +89,56 @@ app.post("/api/contact", async (req, res) => {
       text: `Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`,
     };
 
-    await transporter.sendMail(mailOptions);
+    console.log("Attempting to send email...");
+    console.log("From:", mailOptions.from);
+    console.log("To:", mailOptions.to);
+    
+    // Send email with detailed error logging
+    const info = await transporter.sendMail(mailOptions);
+    
+    console.log("✓ Email sent successfully!");
+    console.log("Message ID:", info.messageId);
+    console.log("Response:", info.response);
+    console.log("Accepted:", info.accepted);
+    console.log("Rejected:", info.rejected);
 
     res.status(201).json({ success: true, message: "Message stored and email sent!" });
   } catch (error) {
-    console.error("Error:", error);
-    res.status(500).json({ success: false, error: "Internal Server Error" });
+    console.error("\n✗ ERROR in /api/contact:");
+    console.error("Error Name:", error.name);
+    console.error("Error Message:", error.message);
+    console.error("Error Code:", error.code);
+    console.error("Error Command:", error.command);
+    console.error("Error Stack:", error.stack);
+    
+    // Check if it's a nodemailer-specific error
+    if (error.code) {
+      console.error("Nodemailer Error Code:", error.code);
+      if (error.code === "EAUTH") {
+        console.error("⚠ Authentication failed - check EMAIL_USER and EMAIL_PASS");
+      } else if (error.code === "ETIMEDOUT") {
+        console.error("⚠ Connection timeout - Gmail may be blocking this IP");
+      } else if (error.code === "ECONNECTION") {
+        console.error("⚠ Connection failed - network or firewall issue");
+      }
+    }
+    
+    res.status(500).json({ 
+      success: false, 
+      error: "Internal Server Error",
+      details: error.message // Include error message in response for debugging
+    });
   }
 });
 
 app.get("/api/messages", async (req, res) => {
   try {
     const messages = await Contact.find();
+    console.log(`✓ Fetched ${messages.length} messages from database`);
     res.json(messages);
   } catch (error) {
-    console.error("Error fetching messages:", error);
+    console.error("✗ Error fetching messages:", error.message);
+    console.error("Full Error:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
@@ -78,64 +147,92 @@ const resumeEmailSchema = new mongoose.Schema({
   email: { type: String, required: true },
   sentAt: { type: Date, default: Date.now },
   status: { type: String, enum: ["pending", "approved", "declined"], default: "pending" },
-})
-
+});
 
 const ResumeEmail = mongoose.model("ResumeEmail", resumeEmailSchema);
 
 app.post("/api/send-download-link", async (req, res) => {
+  console.log("\n=== Resume Request ===");
+  console.log("Timestamp:", new Date().toISOString());
+  console.log("Request Body:", req.body);
+  
   const { email } = req.body;
   if (!email) {
+    console.log("✗ No email provided");
     return res.status(400).json({ message: "Email is required" });
   }
 
   try {
     const newEmailEntry = new ResumeEmail({ email });
     await newEmailEntry.save();
+    console.log("✓ Resume request saved to MongoDB");
 
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: process.env.EMAIL_USER,
       subject: "Resume Request Notification",
       html: `
-    <p>This email (<strong>${email}</strong>) has requested your resume.</p>
-    <p>
-      <a href="http://aravindhprabu.me/adminresume" style="display:inline-block;padding:10px 15px;background-color:#4CAF50;color:white;text-decoration:none;border-radius:4px;">
-        Review and Approve
-      </a>
-    </p>
-  `
-    }
+        <p>This email (<strong>${email}</strong>) has requested your resume.</p>
+        <p>
+          <a href="http://aravindhprabu.me/adminresume" style="display:inline-block;padding:10px 15px;background-color:#4CAF50;color:white;text-decoration:none;border-radius:4px;">
+            Review and Approve
+          </a>
+        </p>
+      `,
+    };
 
-    await transporter.sendMail(mailOptions);
+    console.log("Attempting to send resume request email...");
+    const info = await transporter.sendMail(mailOptions);
+    
+    console.log("✓ Resume request email sent!");
+    console.log("Message ID:", info.messageId);
 
     res.status(200).json({ message: "The resume has been requested" });
   } catch (error) {
-    console.error("Error requesting resume:", error);
-    res.status(500).json({ message: "Failed to process request" });
+    console.error("\n✗ ERROR in /api/send-download-link:");
+    console.error("Error Name:", error.name);
+    console.error("Error Message:", error.message);
+    console.error("Error Code:", error.code);
+    console.error("Error Stack:", error.stack);
+    
+    res.status(500).json({ 
+      message: "Failed to process request",
+      details: error.message 
+    });
   }
 });
-
 
 app.get("/api/resume-emails", async (req, res) => {
   try {
     const emails = await ResumeEmail.find();
+    console.log(`✓ Fetched ${emails.length} resume requests from database`);
     res.json(emails);
   } catch (error) {
-    console.error("Error fetching resume emails:", error);
+    console.error("✗ Error fetching resume emails:", error.message);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
 app.put("/api/resume-emails/:id", async (req, res) => {
-  const { id } = req.params
-  const { status } = req.body
+  console.log("\n=== Resume Approval ===");
+  console.log("Timestamp:", new Date().toISOString());
+  
+  const { id } = req.params;
+  const { status } = req.body;
+  
+  console.log("Resume Email ID:", id);
+  console.log("New Status:", status);
 
   try {
-    const updatedEmail = await ResumeEmail.findByIdAndUpdate(id, { status }, { new: true })
+    const updatedEmail = await ResumeEmail.findByIdAndUpdate(id, { status }, { new: true });
+    console.log("✓ Resume status updated in database");
 
     if (status === "approved") {
-      const recipientEmail = updatedEmail.email
+      const recipientEmail = updatedEmail.email;
+      console.log("Sending resume to:", recipientEmail);
+
+      const resumePath = path.join(__dirname, "public", "Aravindh Prabu Resume.pdf");
+      console.log("Resume file path:", resumePath);
 
       const mailOptions = {
         from: process.env.EMAIL_USER,
@@ -152,24 +249,38 @@ Aravindh Prabu`,
         attachments: [
           {
             filename: "Aravindh Prabu Resume.pdf",
-            path: path.join(__dirname, "public", "Aravindh Prabu Resume.pdf")
-          }
-        ]
-      }
+            path: resumePath,
+          },
+        ],
+      };
 
-      await transporter.sendMail(mailOptions)
+      console.log("Attempting to send resume email with attachment...");
+      const info = await transporter.sendMail(mailOptions);
+      
+      console.log("✓ Resume email sent successfully!");
+      console.log("Message ID:", info.messageId);
+      console.log("Response:", info.response);
     }
 
-    res.json(updatedEmail)
+    res.json(updatedEmail);
   } catch (error) {
-    console.error("Update error:", error)
-    res.status(500).json({ error: "Internal Server Error" })
+    console.error("\n✗ ERROR in /api/resume-emails/:id:");
+    console.error("Error Name:", error.name);
+    console.error("Error Message:", error.message);
+    console.error("Error Code:", error.code);
+    console.error("Error Stack:", error.stack);
+    
+    res.status(500).json({ 
+      error: "Internal Server Error",
+      details: error.message 
+    });
   }
-})
+});
 
+app.listen(PORT, () => {
+  console.log("\n================================");
+  console.log(`✓ Server running on port ${PORT}`);
+  console.log("================================\n");
+});
 
-
-
-
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 // module.exports.handler = serverless(app);
