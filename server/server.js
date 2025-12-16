@@ -3,8 +3,9 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const bodyParser = require("body-parser");
-const nodemailer = require("nodemailer");
+const { Resend } = require("resend");
 const path = require("path");
+const fs = require("fs");
 const serverless = require("serverless-http");
 
 const app = express();
@@ -12,11 +13,15 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(bodyParser.json());
 
+// Your personal Gmail for receiving notifications
+const NOTIFICATION_EMAIL = "aravindhprabu2005@gmail.com";
+
 // Log environment variables status (without exposing values)
 console.log("=== Environment Variables Check ===");
 console.log("MONGODB_URI:", process.env.MONGODB_URI ? "✓ Set" : "✗ Missing");
 console.log("EMAIL_USER:", process.env.EMAIL_USER ? "✓ Set" : "✗ Missing");
-console.log("EMAIL_PASS:", process.env.EMAIL_PASS ? "✓ Set" : "✗ Missing");
+console.log("RESEND_API_KEY:", process.env.RESEND_API_KEY ? "✓ Set" : "✗ Missing");
+console.log("NOTIFICATION_EMAIL:", NOTIFICATION_EMAIL);
 console.log("PORT:", PORT);
 console.log("===================================");
 
@@ -38,31 +43,17 @@ const contactSchema = new mongoose.Schema({
 
 const Contact = mongoose.model("Contact", contactSchema);
 
-// Enable nodemailer debug mode
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false,
-  debug: true, // Enable debug output
-  logger: true, // Log information to console
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
+// Initialize Resend
+const resend = new Resend(process.env.RESEND_API_KEY);
 
-// Verify transporter configuration on startup
-transporter.verify(function (error, success) {
-  if (error) {
-    console.error("✗ Nodemailer Configuration Error:");
-    console.error("Error Message:", error.message);
-    console.error("Error Code:", error.code);
-    console.error("Error Command:", error.command);
-    console.error("Full Error:", error);
+// Test Resend on startup
+(async () => {
+  if (process.env.RESEND_API_KEY) {
+    console.log("✓ Resend initialized successfully");
   } else {
-    console.log("✓ Nodemailer is ready to send emails");
+    console.error("✗ RESEND_API_KEY not found in environment variables");
   }
-});
+})();
 
 app.get("/test", (req, res) => {
   res.send("I am here da!");
@@ -72,61 +63,47 @@ app.post("/api/contact", async (req, res) => {
   console.log("\n=== Contact Form Submission ===");
   console.log("Timestamp:", new Date().toISOString());
   console.log("Request Body:", req.body);
-  
+
   try {
     const { name, email, message } = req.body;
-    
+
     // Save to database
     const newContact = new Contact({ name, email, message });
     await newContact.save();
     console.log("✓ Contact saved to MongoDB");
 
-    // Prepare email
-    const mailOptions = {
+    console.log("Attempting to send email via Resend...");
+    console.log("From:", process.env.EMAIL_USER);
+    console.log("To:", NOTIFICATION_EMAIL);
+
+    // Send email using Resend to your personal Gmail
+    const { data, error } = await resend.emails.send({
       from: process.env.EMAIL_USER,
-      to: process.env.EMAIL_USER,
+      to: [NOTIFICATION_EMAIL], // Changed to your personal Gmail
       subject: `New Contact Message from ${name}`,
       text: `Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`,
-    };
+      html: `<p><strong>Name:</strong> ${name}</p><p><strong>Email:</strong> ${email}</p><p><strong>Message:</strong></p><p>${message}</p>`,
+    });
 
-    console.log("Attempting to send email...");
-    console.log("From:", mailOptions.from);
-    console.log("To:", mailOptions.to);
-    
-    // Send email with detailed error logging
-    const info = await transporter.sendMail(mailOptions);
-    
-    console.log("✓ Email sent successfully!");
-    console.log("Message ID:", info.messageId);
-    console.log("Response:", info.response);
-    console.log("Accepted:", info.accepted);
-    console.log("Rejected:", info.rejected);
+    if (error) {
+      console.error("✗ Resend Error:", error);
+      throw error;
+    }
+
+    console.log("✓ Email sent successfully via Resend!");
+    console.log("Message ID:", data.id);
 
     res.status(201).json({ success: true, message: "Message stored and email sent!" });
   } catch (error) {
     console.error("\n✗ ERROR in /api/contact:");
     console.error("Error Name:", error.name);
     console.error("Error Message:", error.message);
-    console.error("Error Code:", error.code);
-    console.error("Error Command:", error.command);
     console.error("Error Stack:", error.stack);
-    
-    // Check if it's a nodemailer-specific error
-    if (error.code) {
-      console.error("Nodemailer Error Code:", error.code);
-      if (error.code === "EAUTH") {
-        console.error("⚠ Authentication failed - check EMAIL_USER and EMAIL_PASS");
-      } else if (error.code === "ETIMEDOUT") {
-        console.error("⚠ Connection timeout - Gmail may be blocking this IP");
-      } else if (error.code === "ECONNECTION") {
-        console.error("⚠ Connection failed - network or firewall issue");
-      }
-    }
-    
-    res.status(500).json({ 
-      success: false, 
+
+    res.status(500).json({
+      success: false,
       error: "Internal Server Error",
-      details: error.message // Include error message in response for debugging
+      details: error.message,
     });
   }
 });
@@ -155,7 +132,7 @@ app.post("/api/send-download-link", async (req, res) => {
   console.log("\n=== Resume Request ===");
   console.log("Timestamp:", new Date().toISOString());
   console.log("Request Body:", req.body);
-  
+
   const { email } = req.body;
   if (!email) {
     console.log("✗ No email provided");
@@ -167,9 +144,12 @@ app.post("/api/send-download-link", async (req, res) => {
     await newEmailEntry.save();
     console.log("✓ Resume request saved to MongoDB");
 
-    const mailOptions = {
+    console.log("Attempting to send resume request email via Resend...");
+
+    // Send email using Resend to your personal Gmail
+    const { data, error } = await resend.emails.send({
       from: process.env.EMAIL_USER,
-      to: process.env.EMAIL_USER,
+      to: [NOTIFICATION_EMAIL], // Changed to your personal Gmail
       subject: "Resume Request Notification",
       html: `
         <p>This email (<strong>${email}</strong>) has requested your resume.</p>
@@ -179,25 +159,26 @@ app.post("/api/send-download-link", async (req, res) => {
           </a>
         </p>
       `,
-    };
+    });
 
-    console.log("Attempting to send resume request email...");
-    const info = await transporter.sendMail(mailOptions);
-    
-    console.log("✓ Resume request email sent!");
-    console.log("Message ID:", info.messageId);
+    if (error) {
+      console.error("✗ Resend Error:", error);
+      throw error;
+    }
+
+    console.log("✓ Resume request email sent via Resend!");
+    console.log("Message ID:", data.id);
 
     res.status(200).json({ message: "The resume has been requested" });
   } catch (error) {
     console.error("\n✗ ERROR in /api/send-download-link:");
     console.error("Error Name:", error.name);
     console.error("Error Message:", error.message);
-    console.error("Error Code:", error.code);
     console.error("Error Stack:", error.stack);
-    
-    res.status(500).json({ 
+
+    res.status(500).json({
       message: "Failed to process request",
-      details: error.message 
+      details: error.message,
     });
   }
 });
@@ -216,10 +197,10 @@ app.get("/api/resume-emails", async (req, res) => {
 app.put("/api/resume-emails/:id", async (req, res) => {
   console.log("\n=== Resume Approval ===");
   console.log("Timestamp:", new Date().toISOString());
-  
+
   const { id } = req.params;
   const { status } = req.body;
-  
+
   console.log("Resume Email ID:", id);
   console.log("New Status:", status);
 
@@ -234,9 +215,16 @@ app.put("/api/resume-emails/:id", async (req, res) => {
       const resumePath = path.join(__dirname, "public", "Aravindh Prabu Resume.pdf");
       console.log("Resume file path:", resumePath);
 
-      const mailOptions = {
+      // Read file and convert to base64 for Resend
+      const resumeBuffer = fs.readFileSync(resumePath);
+      const resumeBase64 = resumeBuffer.toString("base64");
+
+      console.log("Attempting to send resume email with attachment via Resend...");
+
+      // Send email with attachment using Resend
+      const { data, error } = await resend.emails.send({
         from: process.env.EMAIL_USER,
-        to: recipientEmail,
+        to: [recipientEmail],
         subject: "Requested Resume - Aravindh Prabu",
         text: `Dear Candidate,
 
@@ -246,20 +234,25 @@ Please feel free to reach out if you have any questions or would like to connect
 
 Best regards,  
 Aravindh Prabu`,
+        html: `<p>Dear Candidate,</p>
+<p>Thank you for your interest in my professional profile. As requested, I have attached my resume to this email.</p>
+<p>Please feel free to reach out if you have any questions or would like to connect further.</p>
+<p>Best regards,<br>Aravindh Prabu</p>`,
         attachments: [
           {
             filename: "Aravindh Prabu Resume.pdf",
-            path: resumePath,
+            content: resumeBase64,
           },
         ],
-      };
+      });
 
-      console.log("Attempting to send resume email with attachment...");
-      const info = await transporter.sendMail(mailOptions);
-      
-      console.log("✓ Resume email sent successfully!");
-      console.log("Message ID:", info.messageId);
-      console.log("Response:", info.response);
+      if (error) {
+        console.error("✗ Resend Error:", error);
+        throw error;
+      }
+
+      console.log("✓ Resume email sent successfully via Resend!");
+      console.log("Message ID:", data.id);
     }
 
     res.json(updatedEmail);
@@ -267,20 +260,19 @@ Aravindh Prabu`,
     console.error("\n✗ ERROR in /api/resume-emails/:id:");
     console.error("Error Name:", error.name);
     console.error("Error Message:", error.message);
-    console.error("Error Code:", error.code);
     console.error("Error Stack:", error.stack);
-    
-    res.status(500).json({ 
+
+    res.status(500).json({
       error: "Internal Server Error",
-      details: error.message 
+      details: error.message,
     });
   }
 });
 
-app.listen(PORT, () => {
-  console.log("\n================================");
-  console.log(`✓ Server running on port ${PORT}`);
-  console.log("================================\n");
-});
+// app.listen(PORT, () => {
+//   console.log("\n================================");
+//   console.log(`✓ Server running on port ${PORT}`);
+//   console.log("================================\n");
+// });
 
-// module.exports.handler = serverless(app);
+module.exports.handler = serverless(app);
