@@ -1,6 +1,5 @@
 import { useState } from "react"
 import ResumeImg from '../assets/resume.jpg'
-import axios from "axios"
 import axiosInstance from "./axiosInstance"
 import { XMarkIcon, DocumentArrowDownIcon, CheckCircleIcon } from '@heroicons/react/24/solid'
 

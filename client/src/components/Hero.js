@@ -61,13 +61,13 @@ export default function Hero() {
                         >
                             <AiOutlineGithub className="text-white group-hover:text-purple-300 transition-colors" size={32} />
                         </a>
-                        {/* <a 
+                        <a 
                             href={config.social.leetcode} 
                             className="group p-3 bg-white/10 backdrop-blur-sm rounded-xl hover:bg-white/20 transition-all duration-300 hover:scale-110 hover:shadow-lg hover:shadow-purple-500/50"
                             aria-label="LeetCode"
                         >
                             <SiLeetcode className="text-white group-hover:text-purple-300 transition-colors" size={32} />
-                        </a> */}
+                        </a>
                         <a 
                             href={config.social.Medium} 
                             className="group p-3 bg-white/10 backdrop-blur-sm rounded-xl hover:bg-white/20 transition-all duration-300 hover:scale-110 hover:shadow-lg hover:shadow-purple-500/50"
