@@ -269,10 +269,10 @@ Aravindh Prabu`,
   }
 });
 
-// app.listen(PORT, () => {
-//   console.log("\n================================");
-//   console.log(`✓ Server running on port ${PORT}`);
-//   console.log("================================\n");
-// });
+app.listen(PORT, () => {
+  console.log("\n================================");
+  console.log(`✓ Server running on port ${PORT}`);
+  console.log("================================\n");
+});
 
-module.exports.handler = serverless(app);
+// module.exports.handler = serverless(app);

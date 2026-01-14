@@ -1,9 +1,9 @@
 import axios from 'axios';
 
 const axiosInstance = axios.create({
-    baseURL: 'http://localhost:5000',  
+    baseURL: 'https://api.aravindhprabu.me/',  
 });
-// aws url : https://dzc0ibd8dc.execute-api.ap-south-1.amazonaws.com/dev
+// aws url : https://api.aravindhprabu.me/
 // local url: http://localhost:5000
 
 export default axiosInstance
