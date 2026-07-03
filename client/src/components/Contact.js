@@ -150,7 +150,7 @@ export default function Contact() {
                                 value={formData.message}
                                 onChange={handleChange}
                                 placeholder="Tell me about your project..."
-                                rows="3"
+                                rows="6"
                                 className="w-full px-3 py-2 bg-slate-700/50 border border-purple-500/30 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-300 resize-none"
                                 required
                             ></textarea>
