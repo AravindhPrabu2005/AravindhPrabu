@@ -57,7 +57,7 @@ export default function Resume() {
                             <img 
                                 src="/Resume.png" 
                                 alt="Resume preview"
-                                className="rounded-xl w-[300px] h-auto object-cover transform group-hover:scale-105 transition duration-500 shadow-2xl"
+                                className="rounded-xl w-full max-w-[450px] h-auto object-cover transform group-hover:scale-105 transition duration-500 shadow-2xl"
                             />
                         </div>
                     </div>
