@@ -1,5 +1,6 @@
 import { AiOutlineLinkedin, AiOutlineGithub } from "react-icons/ai";
 import { SiLeetcode, SiMedium } from "react-icons/si";
+import { FaLaptopCode } from "react-icons/fa";
 
 export default function Footer() {
     const currentYear = new Date().getFullYear();
@@ -8,6 +9,7 @@ export default function Footer() {
         linkedin: 'https://www.linkedin.com/in/aravindhprabu-full-stack-developer/',
         github: 'https://github.com/AravindhPrabu2005',
         leetcode: 'https://leetcode.com/u/aravindhprabu2005/',
+        skillrack: 'https://www.skillrack.com/faces/resume.xhtml?id=445446&key=c176cee608f1c05757463c0628883bb850225c6a',
         medium: "https://medium.com/@aravindhprabu2005"
     };
 
@@ -72,8 +74,17 @@ export default function Footer() {
                             rel="noopener noreferrer"
                             className="group p-3 bg-white/5 backdrop-blur-sm rounded-lg hover:bg-white/10 transition-all duration-300 hover:scale-110"
                             aria-label="LeetCode"
-                        >
+                          >
                             <SiLeetcode className="text-gray-400 group-hover:text-purple-300 transition-colors" size={20} />
+                        </a>
+                        <a 
+                            href={socialLinks.skillrack}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="group p-3 bg-white/5 backdrop-blur-sm rounded-lg hover:bg-white/10 transition-all duration-300 hover:scale-110"
+                            aria-label="SkillRack"
+                        >
+                            <FaLaptopCode className="text-gray-400 group-hover:text-purple-300 transition-colors" size={20} />
                         </a>
                         <a 
                             href={socialLinks.medium}

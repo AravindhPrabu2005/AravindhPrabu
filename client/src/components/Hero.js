@@ -1,7 +1,7 @@
 import HeroImg from '../assets/hero.png';
 import { AiOutlineLinkedin, AiOutlineGithub } from "react-icons/ai";
-import { SiLeetcode } from "react-icons/si";
-import { SiMedium } from "react-icons/si";
+import { SiLeetcode, SiMedium } from "react-icons/si";
+import { FaLaptopCode } from "react-icons/fa";
 
 
 export default function Hero() {
@@ -11,6 +11,7 @@ export default function Hero() {
             linkedin: 'https://www.linkedin.com/in/aravindhprabu-full-stack-developer/',
             github: 'https://github.com/AravindhPrabu2005',
             leetcode: 'https://leetcode.com/u/aravindhprabu2005/',
+            skillrack: 'https://www.skillrack.com/faces/resume.xhtml?id=445446&key=c176cee608f1c05757463c0628883bb850225c6a',
             Medium: "https://medium.com/@aravindhprabu2005"
         }
     };
@@ -67,6 +68,15 @@ export default function Hero() {
                             aria-label="LeetCode"
                         >
                             <SiLeetcode className="text-white group-hover:text-purple-300 transition-colors" size={32} />
+                        </a>
+                        <a 
+                            href={config.social.skillrack} 
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="group p-3 bg-white/10 backdrop-blur-sm rounded-xl hover:bg-white/20 transition-all duration-300 hover:scale-110 hover:shadow-lg hover:shadow-purple-500/50"
+                            aria-label="SkillRack"
+                        >
+                            <FaLaptopCode className="text-white group-hover:text-purple-300 transition-colors" size={32} />
                         </a>
                         <a 
                             href={config.social.Medium} 
