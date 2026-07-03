@@ -1,7 +1,6 @@
-import React from 'react'
+import React from 'react';
 import { FaLongArrowAltRight } from "react-icons/fa";
 import { Link } from 'react-router-dom';
-
 
 const SkillItem = ({ iconClass, name, desc }) => (
   <div className="group flex items-center space-x-2 p-2 bg-white/5 backdrop-blur-sm rounded-lg border border-purple-500/20 hover:border-purple-500/50 hover:bg-white/10 transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-purple-500/20">
@@ -13,8 +12,7 @@ const SkillItem = ({ iconClass, name, desc }) => (
       <p className="text-[10px] text-gray-400">{desc}</p>
     </div>
   </div>
-)
-
+);
 
 const SkillCategory = ({ title, children }) => (
   <div className="flex flex-col space-y-2">
@@ -24,8 +22,7 @@ const SkillCategory = ({ title, children }) => (
     </div>
     <div className="flex flex-col space-y-2">{children}</div>
   </div>
-)
-
+);
 
 const Skills = () => (
   <section id="skills" className="relative py-20 px-6 md:px-12 lg:px-24 bg-gradient-to-b from-slate-900 to-slate-800 text-white overflow-hidden">
@@ -56,43 +53,52 @@ const Skills = () => (
 
         {/* Skills Grid - Desktop: Grid Layout, Mobile: Horizontal Scroll */}
         <div className="overflow-x-auto md:overflow-x-visible pb-6 scrollbar-hide">
-          <div className="flex md:grid md:grid-cols-3 lg:grid-cols-5 gap-6 min-w-max md:min-w-0">
-            <SkillCategory title="Frontend">
+          <div className="flex md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 min-w-max md:min-w-0">
+            <SkillCategory title="Programming Languages">
+              <SkillItem iconClass="fab fa-java" name="Java" desc="OOP language" />
+              <SkillItem iconClass="fas fa-code" name="C" desc="Procedural programming" />
+              <SkillItem iconClass="fas fa-code" name="SQL" desc="Query language" />
+            </SkillCategory>
+
+            <SkillCategory title="Front-end">
               <SkillItem iconClass="fab fa-html5" name="HTML" desc="Web structure" />
               <SkillItem iconClass="fab fa-css3-alt" name="CSS" desc="Web styling" />
               <SkillItem iconClass="fab fa-js" name="JavaScript" desc="Interactivity" />
               <SkillItem iconClass="fab fa-react" name="React.js" desc="Frontend Library" />
-              <SkillItem iconClass="fas fa-wind" name="Tailwind CSS" desc="Utility-first CSS" />
-              <SkillItem iconClass="fab fa-bootstrap" name="Bootstrap" desc="CSS Framework" />
+              <SkillItem iconClass="fas fa-wind" name="TailwindCSS" desc="Utility-first CSS" />
             </SkillCategory>
 
-            <SkillCategory title="Backend">
+            <SkillCategory title="Back-end">
               <SkillItem iconClass="fab fa-node-js" name="Node.js" desc="JavaScript runtime" />
               <SkillItem iconClass="fas fa-server" name="Express.js" desc="Web framework" />
               <SkillItem iconClass="fas fa-plug" name="REST API" desc="API architecture" />
-              <SkillItem iconClass="fas fa-rocket" name="FastAPI" desc="Python API framework" />
-              <SkillItem iconClass="fas fa-database" name="Mongoose" desc="MongoDB ODM" />
             </SkillCategory>
 
             <SkillCategory title="Databases">
               <SkillItem iconClass="fas fa-database" name="MongoDB" desc="NoSQL database" />
               <SkillItem iconClass="fas fa-database" name="PostgreSQL" desc="Relational database" />
-              <SkillItem iconClass="fas fa-database" name="MySQL" desc="Relational database" />
+              <SkillItem iconClass="fas fa-database" name="ChromaDB" desc="Vector database" />
+              <SkillItem iconClass="fas fa-bolt" name="Redis" desc="In-memory cache" />
             </SkillCategory>
 
-            <SkillCategory title="Tools & Platforms">
+            <SkillCategory title="Tools & Libraries">
+              <SkillItem iconClass="fab fa-jira" name="Jira" desc="Project management" />
+              <SkillItem iconClass="fas fa-vial" name="Postman" desc="API testing" />
+              <SkillItem iconClass="fas fa-project-diagram" name="Mongoose" desc="MongoDB ODM" />
+              <SkillItem iconClass="fas fa-network-wired" name="Socket.IO" desc="Real-time messaging" />
+              <SkillItem iconClass="fas fa-shield-alt" name="Zod" desc="Schema validation" />
+              <SkillItem iconClass="fas fa-link" name="LangChain" desc="LLM framework" />
+              <SkillItem iconClass="fas fa-brain" name="LangGraph" desc="Stateful agent framework" />
+            </SkillCategory>
+
+            <SkillCategory title="DevOps">
               <SkillItem iconClass="fab fa-git-alt" name="Git" desc="Version control" />
               <SkillItem iconClass="fab fa-github" name="GitHub" desc="Code hosting" />
-              <SkillItem iconClass="fas fa-vial" name="Postman" desc="API testing" />
+              <SkillItem iconClass="fas fa-tasks" name="GitHub Actions" desc="CI/CD Automation" />
               <SkillItem iconClass="fab fa-docker" name="Docker" desc="App containerization" />
-              <SkillItem iconClass="fab fa-microsoft" name="Azure" desc="Cloud platform" />
-            </SkillCategory>
-
-            <SkillCategory title="Programming Languages">
-              <SkillItem iconClass="fab fa-java" name="Java" desc="OOP language" />
-              <SkillItem iconClass="fas fa-code" name="SQL" desc="Query language" />
-              <SkillItem iconClass="fab fa-js" name="JavaScript" desc="Frontend & backend scripting" />
-              <SkillItem iconClass="fas fa-code" name="C" desc="Procedural programming" />
+              <SkillItem iconClass="fas fa-cubes" name="Docker Compose" desc="Multi-container config" />
+              <SkillItem iconClass="fas fa-server" name="NGINX" desc="Reverse proxy" />
+              <SkillItem iconClass="fab fa-aws" name="AWS" desc="Lambda, EC2, S3" />
             </SkillCategory>
           </div>
         </div>
@@ -120,7 +126,6 @@ const Skills = () => (
       </div>
     </div>
   </section>
-)
+);
 
-
-export default Skills
+export default Skills;
