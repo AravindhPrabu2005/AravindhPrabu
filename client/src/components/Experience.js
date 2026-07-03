@@ -1,36 +1,17 @@
-import React from 'react'
-import { FaLongArrowAltRight } from "react-icons/fa";
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-
-
-const experiences = [
-  {
-    role: "FREELANCING | FRONT-END DEVELOPER",
-    logo: "/Experience/freelancing.png",
-    duration: "July 2024 – Sep 2024",
-    location: "Coimbatore, India",
-    points: [
-      "Collaborated with a freelancer to work on holidayjoy.com project.",
-      "Managed tasks via Jira and contributed on GitHub.",
-      "Utilized React.js and TailwindCSS in the tech stack."
-    ]
-  },
-  {
-    role: "INTERNSHIP | RBG.ai",
-    logo: "/Experience/RBG.jpeg",
-    duration: "Dec 2024 – Jan 2025",
-    location: "Coimbatore, India",
-    points: [
-      "Worked with MongoDB, Fast API and React.js with TailwindCSS.",
-      "Developed a web application for attendance & task management (Internal ERP).",
-      "Improved security by creating JWT auth and writing protected routes.",
-      "Improved User experience by adding Role based entry."
-    ]
-  }
-]
-
+import { FaLongArrowAltRight } from 'react-icons/fa';
+import axiosInstance from './axiosInstance';
 
 const Experience = () => {
+  const [experiences, setExperiences] = useState([]);
+
+  useEffect(() => {
+    axiosInstance.get("/api/experiences")
+      .then(res => setExperiences(res.data || []))
+      .catch(err => console.error("Error loading experiences:", err));
+  }, []);
+
   return (
     <section id="experience" className="relative py-20 px-6 md:px-12 lg:px-24 bg-gradient-to-b from-slate-800 to-slate-900 text-white overflow-hidden">
       {/* Background decoration */}
@@ -49,9 +30,9 @@ const Experience = () => {
 
         {/* Experience Cards */}
         <div className="grid md:grid-cols-2 gap-8 mb-12">
-          {experiences.map(({ role, logo, duration, location, points }, index) => (
+          {experiences.map(({ _id, role, logo, duration, location, points }, index) => (
             <div 
-              key={index} 
+              key={_id || index} 
               className="group relative bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-purple-500/20 hover:border-purple-500/50 transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl hover:shadow-purple-500/20"
             >
               {/* Gradient border effect on hover */}
@@ -93,7 +74,7 @@ const Experience = () => {
                   {points.map((point, i) => (
                     <li key={i} className="flex items-start space-x-2 text-gray-300 text-sm">
                       <span className="flex-shrink-0 w-1.5 h-1.5 rounded-full bg-gradient-to-r from-purple-400 to-pink-400 mt-2"></span>
-                      <span className="flex-1">{point}</span>
+                      <span className="flex-1 leading-relaxed">{point}</span>
                     </li>
                   ))}
                 </ul>
@@ -102,11 +83,17 @@ const Experience = () => {
           ))}
         </div>
 
+        {experiences.length === 0 && (
+          <div className="text-center text-gray-500 py-12">
+            No experiences listed yet.
+          </div>
+        )}
+
         {/* Achievements CTA with Animation */}
-        <div className="w-full flex justify-center">
+        <div className="w-full flex justify-center mt-12">
           <Link
             to="/achivements"
-            className="group relative px-8 py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold rounded-full overflow-hidden shadow-lg hover:shadow-purple-500/50 transition-all duration-300 hover:scale-105 pulse-glow"
+            className="group relative px-12 py-5 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-lg md:text-xl font-bold rounded-full overflow-hidden shadow-xl hover:shadow-purple-500/50 transition-all duration-300 hover:scale-110 pulse-glow"
           >
             <span className="absolute inset-0 bg-gradient-to-r from-pink-500 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></span>
             
@@ -118,14 +105,13 @@ const Experience = () => {
             
             <span className="relative flex items-center gap-3">
               Hackathons and achievements
-              <FaLongArrowAltRight className="group-hover:translate-x-1 transition-transform duration-300 bounce-arrow" size={20} />
+              <FaLongArrowAltRight className="group-hover:translate-x-2 transition-transform duration-300 bounce-arrow" size={24} />
             </span>
           </Link>
         </div>
       </div>
     </section>
-  )
-}
+  );
+};
 
-
-export default Experience
+export default Experience;

@@ -102,7 +102,7 @@ const Skills = () => (
       <div className="w-full mt-12 flex justify-center">
         <Link
           to="/certificates"
-          className="group relative px-8 py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold rounded-full overflow-hidden shadow-lg hover:shadow-purple-500/50 transition-all duration-300 hover:scale-105 pulse-glow"
+          className="group relative px-12 py-5 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-lg md:text-xl font-bold rounded-full overflow-hidden shadow-xl hover:shadow-purple-500/50 transition-all duration-300 hover:scale-110 pulse-glow"
         >
           <span className="absolute inset-0 bg-gradient-to-r from-pink-500 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></span>
           
@@ -114,7 +114,7 @@ const Skills = () => (
           
           <span className="relative flex items-center gap-3">
             View my certifications
-            <FaLongArrowAltRight className="group-hover:translate-x-1 transition-transform duration-300 bounce-arrow" size={20} />
+            <FaLongArrowAltRight className="group-hover:translate-x-2 transition-transform duration-300 bounce-arrow" size={24} />
           </span>
         </Link>
       </div>

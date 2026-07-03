@@ -1,37 +1,15 @@
-import React from 'react';
-
-const projects = [
-  {
-    title: 'Mealzy Health',
-    image: '/path/to/your/image.png', // replace with actual image path
-    description: 'Mealzy Health is a health and wellness companion powered by AI, designed to help users make smarter food choices, monitor their nutritional intake, and build sustainable habits.',
-    stack: ['React Native', 'Node js', 'MongoDb', 'Next js'],
-    github: 'https://github.com/your-repo/mealzy-health'
-  },
-  {
-    title: 'Mealzy Health',
-    image: '/path/to/your/image.png', // replace with actual image path
-    description: 'Mealzy Health is a health and wellness companion powered by AI, designed to help users make smarter food choices, monitor their nutritional intake, and build sustainable habits.',
-    stack: ['React Native', 'Node js', 'MongoDb', 'Next js'],
-    github: 'https://github.com/your-repo/mealzy-health'
-  },
-  {
-    title: 'Mealzy Health',
-    image: '/path/to/your/image.png', // replace with actual image path
-    description: 'Mealzy Health is a health and wellness companion powered by AI, designed to help users make smarter food choices, monitor their nutritional intake, and build sustainable habits.',
-    stack: ['React Native', 'Node js', 'MongoDb', 'Next js'],
-    github: 'https://github.com/your-repo/mealzy-health'
-  },
-  {
-    title: 'Mealzy Health',
-    image: '/path/to/your/image.png', // replace with actual image path
-    description: 'Mealzy Health is a health and wellness companion powered by AI, designed to help users make smarter food choices, monitor their nutritional intake, and build sustainable habits.',
-    stack: ['React Native', 'Node js', 'MongoDb', 'Next js'],
-    github: 'https://github.com/your-repo/mealzy-health'
-  },
-];
+import React, { useState, useEffect } from 'react';
+import axiosInstance from './axiosInstance';
 
 const Allprojects = () => {
+  const [projects, setProjects] = useState([]);
+
+  useEffect(() => {
+    axiosInstance.get("/api/projects")
+      .then(res => setProjects(res.data || []))
+      .catch(err => console.error("Error loading projects:", err));
+  }, []);
+
   return (
     <div className="relative flex flex-col min-h-screen w-full py-20 px-6 md:px-12 lg:px-24 items-center bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 text-white overflow-hidden">
       {/* Background decoration */}
@@ -51,7 +29,7 @@ const Allprojects = () => {
       <div className="relative grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-7xl">
         {projects.map((project, index) => (
           <div 
-            key={index} 
+            key={project._id || index} 
             className="group bg-white/5 backdrop-blur-sm rounded-2xl overflow-hidden border border-purple-500/20 hover:border-purple-500/50 transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl hover:shadow-purple-500/20"
           >
             {/* Gradient border effect on hover */}
@@ -59,7 +37,7 @@ const Allprojects = () => {
             
             <div className="relative">
               {/* Image Container */}
-              <div className="relative h-48 overflow-hidden bg-slate-800">
+              <div className="relative h-48 overflow-hidden bg-slate-950 flex items-center justify-center">
                 <img 
                   src={project.image} 
                   alt={project.title} 
@@ -77,7 +55,7 @@ const Allprojects = () => {
 
                 {/* Tech Stack Tags */}
                 <div className="flex flex-wrap gap-2 mb-4">
-                  {project.stack.map((tech, i) => (
+                  {project.stack && project.stack.map((tech, i) => (
                     <span 
                       key={i} 
                       className="px-3 py-1 text-xs font-medium bg-gradient-to-r from-purple-500/20 to-pink-500/20 text-purple-300 rounded-full border border-purple-500/30 hover:border-purple-500/50 transition-colors duration-300"
@@ -88,7 +66,7 @@ const Allprojects = () => {
                 </div>
 
                 {/* Description */}
-                <p className="text-sm text-gray-300 leading-relaxed mb-4">
+                <p className="text-sm text-gray-300 leading-relaxed mb-4 min-h-[64px] line-clamp-3">
                   {project.description}
                 </p>
 
@@ -113,7 +91,7 @@ const Allprojects = () => {
         ))}
       </div>
 
-      {/* Empty State (if no projects) */}
+      {/* Empty State */}
       {projects.length === 0 && (
         <div className="flex flex-col items-center justify-center py-20">
           <svg className="w-24 h-24 text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

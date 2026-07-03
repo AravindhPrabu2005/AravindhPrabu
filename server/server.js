@@ -7,6 +7,9 @@ const { Resend } = require("resend");
 const path = require("path");
 const fs = require("fs");
 const serverless = require("serverless-http");
+const axios = require("axios");
+const cloudinary = require("cloudinary").v2;
+const multer = require("multer");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -27,7 +30,10 @@ console.log("===================================");
 
 mongoose
   .connect(process.env.MONGODB_URI)
-  .then(() => console.log("✓ MongoDB Connected Successfully"))
+  .then(() => {
+    console.log("✓ MongoDB Connected Successfully");
+    initSettings();
+  })
   .catch((err) => {
     console.error("✗ MongoDB Connection Error:");
     console.error("Error Message:", err.message);
@@ -42,6 +48,77 @@ const contactSchema = new mongoose.Schema({
 });
 
 const Contact = mongoose.model("Contact", contactSchema);
+
+const settingsSchema = new mongoose.Schema({
+  key: { type: String, default: "admin_settings", unique: true },
+  resumeUrl: { type: String, default: "" },
+  coverLetterText: { type: String, default: `Dear Candidate,
+
+Thank you for your interest in my professional profile. As requested, I have attached my resume to this email.
+
+Please feel free to reach out if you have any questions or would like to connect further.
+
+Best regards,  
+Aravindh Prabu` }
+});
+
+const AdminSettings = mongoose.model("AdminSettings", settingsSchema);
+
+const projectSchema = new mongoose.Schema({
+  title: { type: String, required: true },
+  image: { type: String, required: true },
+  description: { type: String, required: true },
+  github: { type: String, required: true },
+  stack: [String],
+  featured: { type: Boolean, default: false }
+});
+const Project = mongoose.model("Project", projectSchema);
+
+const certificationSchema = new mongoose.Schema({
+  title: { type: String, required: true },
+  provider: { type: String, required: true },
+  image: { type: String, required: true },
+  description: String
+});
+const Certification = mongoose.model("Certification", certificationSchema);
+
+const achievementSchema = new mongoose.Schema({
+  title: { type: String, required: true },
+  position: { type: String, required: true },
+  description: { type: String, required: true },
+  certificate: { type: String, required: true },
+  type: { type: Number, required: true }
+});
+const Achievement = mongoose.model("Achievement", achievementSchema);
+
+const experienceSchema = new mongoose.Schema({
+  role: { type: String, required: true },
+  logo: { type: String, required: true },
+  duration: { type: String, required: true },
+  location: { type: String, required: true },
+  points: [String]
+});
+const Experience = mongoose.model("Experience", experienceSchema);
+
+
+const initSettings = async () => {
+  try {
+    let settings = await AdminSettings.findOne({ key: "admin_settings" });
+    if (!settings) {
+      await AdminSettings.create({ 
+        key: "admin_settings",
+        resumeUrl: "/public/Aravindh Prabu Resume.pdf"
+      });
+      console.log("✓ Default AdminSettings created");
+    } else if (settings.resumeUrl && settings.resumeUrl.includes("cloudinary")) {
+      settings.resumeUrl = "/public/Aravindh Prabu Resume.pdf";
+      await settings.save();
+      console.log("✓ Reset Cloudinary URL to local path in DB settings");
+    }
+  } catch (err) {
+    console.error("✗ Failed to initialize settings:", err);
+  }
+};
 
 // Initialize Resend
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -154,7 +231,7 @@ app.post("/api/send-download-link", async (req, res) => {
       html: `
         <p>This email (<strong>${email}</strong>) has requested your resume.</p>
         <p>
-          <a href="http://aravindhprabu.me/adminresume" style="display:inline-block;padding:10px 15px;background-color:#4CAF50;color:white;text-decoration:none;border-radius:4px;">
+          <a href="http://aravindhprabu.me/admin/resume-requests" style="display:inline-block;padding:10px 15px;background-color:#4CAF50;color:white;text-decoration:none;border-radius:4px;">
             Review and Approve
           </a>
         </p>
@@ -212,32 +289,31 @@ app.put("/api/resume-emails/:id", async (req, res) => {
       const recipientEmail = updatedEmail.email;
       console.log("Sending resume to:", recipientEmail);
 
-      const resumePath = path.join(__dirname, "public", "Aravindh Prabu Resume.pdf");
-      console.log("Resume file path:", resumePath);
-
-      // Read file and convert to base64 for Resend
-      const resumeBuffer = fs.readFileSync(resumePath);
-      const resumeBase64 = resumeBuffer.toString("base64");
-
-      console.log("Attempting to send resume email with attachment via Resend...");
-
-      // Send email with attachment using Resend
-      const { data, error } = await resend.emails.send({
-        from: process.env.EMAIL_USER,
-        to: [recipientEmail],
-        subject: "Requested Resume - Aravindh Prabu",
-        text: `Dear Candidate,
+      // Fetch dynamic settings from Database
+      const settings = await AdminSettings.findOne({ key: "admin_settings" });
+      const coverLetter = settings ? settings.coverLetterText : `Dear Candidate,
 
 Thank you for your interest in my professional profile. As requested, I have attached my resume to this email.
 
 Please feel free to reach out if you have any questions or would like to connect further.
 
 Best regards,  
-Aravindh Prabu`,
-        html: `<p>Dear Candidate,</p>
-<p>Thank you for your interest in my professional profile. As requested, I have attached my resume to this email.</p>
-<p>Please feel free to reach out if you have any questions or would like to connect further.</p>
-<p>Best regards,<br>Aravindh Prabu</p>`,
+Aravindh Prabu`;
+      const resumePath = path.join(__dirname, "public", "Aravindh Prabu Resume.pdf");
+      console.log("Reading local resume file path:", resumePath);
+      const resumeBuffer = fs.readFileSync(resumePath);
+      const resumeBase64 = resumeBuffer.toString("base64");
+
+      console.log("Attempting to send resume email with attachment via Resend...");
+      const coverLetterHtml = coverLetter.replace(/\n/g, "<br />");
+
+      // Send email with attachment using Resend
+      const { data, error } = await resend.emails.send({
+        from: process.env.EMAIL_USER,
+        to: [recipientEmail],
+        subject: "Requested Resume - Aravindh Prabu",
+        text: coverLetter,
+        html: `<p>${coverLetterHtml}</p>`,
         attachments: [
           {
             filename: "Aravindh Prabu Resume.pdf",
@@ -268,6 +344,455 @@ Aravindh Prabu`,
     });
   }
 });
+
+// DELETE individual contact message
+app.delete("/api/messages/:id", async (req, res) => {
+  try {
+    await Contact.findByIdAndDelete(req.params.id);
+    res.json({ success: true, message: "Message deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error", details: error.message });
+  }
+});
+
+// DELETE all contact messages
+app.delete("/api/messages", async (req, res) => {
+  try {
+    await Contact.deleteMany({});
+    res.json({ success: true, message: "All messages deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error", details: error.message });
+  }
+});
+
+// DELETE individual resume request
+app.delete("/api/resume-emails/:id", async (req, res) => {
+  try {
+    await ResumeEmail.findByIdAndDelete(req.params.id);
+    res.json({ success: true, message: "Resume request deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error", details: error.message });
+  }
+});
+
+// DELETE resume requests (all or history status)
+app.delete("/api/resume-emails", async (req, res) => {
+  try {
+    const { status } = req.query;
+    const filter = status === "history" ? { status: { $ne: "pending" } } : {};
+    await ResumeEmail.deleteMany(filter);
+    res.json({ success: true, message: "Resume requests deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error", details: error.message });
+  }
+});
+// Configure Cloudinary
+// Configure Multer storage locally
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, path.join(__dirname, "public"));
+  },
+  filename: (req, file, cb) => {
+    cb(null, "Aravindh Prabu Resume.pdf");
+  }
+});
+
+const upload = multer({
+  storage,
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === "application/pdf") {
+      cb(null, true);
+    } else {
+      cb(new Error("Only PDF files are allowed!"), false);
+    }
+  }
+});
+
+// GET Settings
+app.get("/api/settings", async (req, res) => {
+  try {
+    const settings = await AdminSettings.findOne({ key: "admin_settings" });
+    res.json(settings);
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error", details: error.message });
+  }
+});
+
+// PUT Cover Letter
+app.put("/api/settings/cover-letter", async (req, res) => {
+  try {
+    const { coverLetterText } = req.body;
+    const settings = await AdminSettings.findOneAndUpdate(
+      { key: "admin_settings" },
+      { coverLetterText },
+      { new: true }
+    );
+    res.json(settings);
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error", details: error.message });
+  }
+});
+
+// POST Resume PDF upload locally
+app.post("/api/settings/resume", upload.single("resume"), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "No PDF file provided" });
+    }
+
+    const resumeUrl = "/public/Aravindh Prabu Resume.pdf";
+
+    // Save in settings
+    const settings = await AdminSettings.findOneAndUpdate(
+      { key: "admin_settings" },
+      { resumeUrl },
+      { new: true }
+    );
+
+    res.json({ success: true, resumeUrl, settings });
+  } catch (error) {
+    console.error("Local file write failed:", error);
+    res.status(500).json({ error: "Local file write failed", details: error.message });
+  }
+});
+
+
+// GET Secure Resume PDF view
+app.get("/api/settings/resume/view", (req, res) => {
+  try {
+    const { token } = req.query;
+    if (token !== "Saibaba@123@123") {
+      return res.status(401).send("Unauthorized");
+    }
+
+    const resumePath = path.join(__dirname, "public", "Aravindh Prabu Resume.pdf");
+    if (!fs.existsSync(resumePath)) {
+      return res.status(404).send("Resume file not found");
+    }
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.sendFile(resumePath);
+  } catch (error) {
+    res.status(500).send("Error loading resume file");
+  }
+});
+
+
+
+// Configure Cloudinary for generic portfolio image uploads
+cloudinary.config({
+  cloud_name: process.env.CLOUD_NAME,
+  api_key: process.env.CLOUD_API_KEY,
+  api_secret: process.env.CLOUD_API_SECRET,
+});
+
+// Configure Multer memory storage for portfolio images
+const imageUpload = multer({
+  storage: multer.memoryStorage(),
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith("image/")) {
+      cb(null, true);
+    } else {
+      cb(new Error("Only image files are allowed!"), false);
+    }
+  }
+});
+
+// Cloudinary image upload helper
+const uploadImageToCloudinary = (fileBuffer, folder = "portfolio") => {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      {
+        resource_type: "image",
+        folder: folder,
+        overwrite: true
+      },
+      (error, result) => {
+        if (error) reject(error);
+        else resolve(result.secure_url);
+      }
+    );
+    stream.end(fileBuffer);
+  });
+};
+
+// ==========================================
+// PROJECTS CRUD ENDPOINTS
+// ==========================================
+
+// GET all projects
+app.get("/api/projects", async (req, res) => {
+  try {
+    const projects = await Project.find();
+    res.json(projects);
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error", details: error.message });
+  }
+});
+
+// POST create project (with image upload)
+app.post("/api/projects", imageUpload.single("image"), async (req, res) => {
+  try {
+    const { title, description, github, stack, featured } = req.body;
+    if (!req.file) {
+      return res.status(400).json({ error: "Image file is required" });
+    }
+
+    const imageUrl = await uploadImageToCloudinary(req.file.buffer, "projects");
+    const project = await Project.create({
+      title,
+      description,
+      github,
+      stack: typeof stack === "string" ? JSON.parse(stack) : stack,
+      featured: featured === "true" || featured === true,
+      image: imageUrl
+    });
+    res.json(project);
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error", details: error.message });
+  }
+});
+
+// PUT update project (optional image upload)
+app.put("/api/projects/:id", imageUpload.single("image"), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, description, github, stack, featured } = req.body;
+    const updateData = {
+      title,
+      description,
+      github,
+      stack: typeof stack === "string" ? JSON.parse(stack) : stack,
+      featured: featured === "true" || featured === true
+    };
+
+    if (req.file) {
+      const imageUrl = await uploadImageToCloudinary(req.file.buffer, "projects");
+      updateData.image = imageUrl;
+    }
+
+    const project = await Project.findByIdAndUpdate(id, updateData, { new: true });
+    res.json(project);
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error", details: error.message });
+  }
+});
+
+// DELETE project
+app.delete("/api/projects/:id", async (req, res) => {
+  try {
+    await Project.findByIdAndDelete(req.params.id);
+    res.json({ success: true, message: "Project deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error", details: error.message });
+  }
+});
+
+// ==========================================
+// CERTIFICATIONS CRUD ENDPOINTS
+// ==========================================
+
+// GET all certifications
+app.get("/api/certifications", async (req, res) => {
+  try {
+    const certs = await Certification.find();
+    res.json(certs);
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error", details: error.message });
+  }
+});
+
+// POST create certification (with image upload)
+app.post("/api/certifications", imageUpload.single("image"), async (req, res) => {
+  try {
+    const { title, provider, description } = req.body;
+    if (!req.file) {
+      return res.status(400).json({ error: "Image file is required" });
+    }
+
+    const imageUrl = await uploadImageToCloudinary(req.file.buffer, "certifications");
+    const cert = await Certification.create({
+      title,
+      provider,
+      description,
+      image: imageUrl
+    });
+    res.json(cert);
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error", details: error.message });
+  }
+});
+
+// PUT update certification (optional image upload)
+app.put("/api/certifications/:id", imageUpload.single("image"), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, provider, description } = req.body;
+    const updateData = { title, provider, description };
+
+    if (req.file) {
+      const imageUrl = await uploadImageToCloudinary(req.file.buffer, "certifications");
+      updateData.image = imageUrl;
+    }
+
+    const cert = await Certification.findByIdAndUpdate(id, updateData, { new: true });
+    res.json(cert);
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error", details: error.message });
+  }
+});
+
+// DELETE certification
+app.delete("/api/certifications/:id", async (req, res) => {
+  try {
+    await Certification.findByIdAndDelete(req.params.id);
+    res.json({ success: true, message: "Certification deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error", details: error.message });
+  }
+});
+
+// ==========================================
+// ACHIEVEMENTS CRUD ENDPOINTS
+// ==========================================
+
+// GET all achievements
+app.get("/api/achievements", async (req, res) => {
+  try {
+    const achievements = await Achievement.find();
+    res.json(achievements);
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error", details: error.message });
+  }
+});
+
+// POST create achievement (with image upload)
+app.post("/api/achievements", imageUpload.single("image"), async (req, res) => {
+  try {
+    const { title, position, description, type } = req.body;
+    if (!req.file) {
+      return res.status(400).json({ error: "Certificate image file is required" });
+    }
+
+    const imageUrl = await uploadImageToCloudinary(req.file.buffer, "achievements");
+    const achievement = await Achievement.create({
+      title,
+      position,
+      description,
+      type: Number(type),
+      certificate: imageUrl
+    });
+    res.json(achievement);
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error", details: error.message });
+  }
+});
+
+// PUT update achievement (optional image upload)
+app.put("/api/achievements/:id", imageUpload.single("image"), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, position, description, type } = req.body;
+    const updateData = {
+      title,
+      position,
+      description,
+      type: Number(type)
+    };
+
+    if (req.file) {
+      const imageUrl = await uploadImageToCloudinary(req.file.buffer, "achievements");
+      updateData.certificate = imageUrl;
+    }
+
+    const achievement = await Achievement.findByIdAndUpdate(id, updateData, { new: true });
+    res.json(achievement);
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error", details: error.message });
+  }
+});
+
+// DELETE achievement
+app.delete("/api/achievements/:id", async (req, res) => {
+  try {
+    await Achievement.findByIdAndDelete(req.params.id);
+    res.json({ success: true, message: "Achievement deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error", details: error.message });
+  }
+});
+
+
+// ==========================================
+// EXPERIENCE CRUD ENDPOINTS
+// ==========================================
+
+// GET all experiences
+app.get("/api/experiences", async (req, res) => {
+  try {
+    const experiences = await Experience.find();
+    res.json(experiences);
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error", details: error.message });
+  }
+});
+
+// POST create experience (with logo image upload)
+app.post("/api/experiences", imageUpload.single("image"), async (req, res) => {
+  try {
+    const { role, duration, location, points } = req.body;
+    if (!req.file) {
+      return res.status(400).json({ error: "Company logo is required" });
+    }
+
+    const imageUrl = await uploadImageToCloudinary(req.file.buffer, "experience");
+    const experience = await Experience.create({
+      role,
+      duration,
+      location,
+      points: typeof points === "string" ? JSON.parse(points) : points,
+      logo: imageUrl
+    });
+    res.json(experience);
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error", details: error.message });
+  }
+});
+
+// PUT update experience (optional logo upload)
+app.put("/api/experiences/:id", imageUpload.single("image"), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { role, duration, location, points } = req.body;
+    const updateData = {
+      role,
+      duration,
+      location,
+      points: typeof points === "string" ? JSON.parse(points) : points
+    };
+
+    if (req.file) {
+      const imageUrl = await uploadImageToCloudinary(req.file.buffer, "experience");
+      updateData.logo = imageUrl;
+    }
+
+    const experience = await Experience.findByIdAndUpdate(id, updateData, { new: true });
+    res.json(experience);
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error", details: error.message });
+  }
+});
+
+// DELETE experience
+app.delete("/api/experiences/:id", async (req, res) => {
+  try {
+    await Experience.findByIdAndDelete(req.params.id);
+    res.json({ success: true, message: "Experience deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error", details: error.message });
+  }
+});
+
 
 app.listen(PORT, () => {
   console.log("\n================================");

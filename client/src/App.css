@@ -63,10 +63,10 @@ html {
 /* Shimmer effect for button */
 @keyframes shimmer {
   0% {
-    transform: translateX(-100%) rotate(45deg);
+    transform: translateX(-150%) skewX(-25deg);
   }
   100% {
-    transform: translateX(100%) rotate(45deg);
+    transform: translateX(150%) skewX(-25deg);
   }
 }
 
@@ -74,49 +74,50 @@ html {
   position: absolute;
   top: 0;
   left: 0;
-  width: 50%;
+  width: 60px;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-  animation: shimmer 3s infinite;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.45) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  animation: shimmer 1.5s infinite linear;
 }
 
 /* Pulsing ring around button */
 @keyframes pulse-ring {
   0% {
-    transform: scale(1);
-    opacity: 0.6;
-  }
-  50% {
-    transform: scale(1.05);
-    opacity: 0;
+    transform: scale(0.95);
+    opacity: 0.85;
   }
   100% {
-    transform: scale(1);
+    transform: scale(1.18);
     opacity: 0;
   }
 }
 
 .pulse-ring {
   position: absolute;
-  inset: -4px;
-  border: 2px solid rgba(168, 85, 247, 0.6);
+  inset: -6px;
+  border: 3px solid rgba(168, 85, 247, 0.7);
   border-radius: 9999px;
-  animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  animation: pulse-ring 1.2s cubic-bezier(0.25, 0, 0, 1) infinite;
   pointer-events: none;
 }
 
 /* Subtle glow pulse */
 @keyframes glow-pulse {
   0%, 100% {
-    box-shadow: 0 10px 15px -3px rgba(168, 85, 247, 0.3);
+    box-shadow: 0 0 15px rgba(168, 85, 247, 0.4), 0 0 5px rgba(236, 72, 153, 0.2);
   }
   50% {
-    box-shadow: 0 20px 25px -5px rgba(168, 85, 247, 0.5);
+    box-shadow: 0 0 35px rgba(168, 85, 247, 0.9), 0 0 15px rgba(236, 72, 153, 0.5);
   }
 }
 
 .pulse-glow {
-  animation: glow-pulse 3s ease-in-out infinite;
+  animation: glow-pulse 1.5s ease-in-out infinite;
 }
 
 /* Arrow bounce */

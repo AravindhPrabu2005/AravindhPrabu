@@ -1,23 +1,16 @@
-import React, { useState } from 'react';
-
-const certifications = [
-  {
-    title: 'The Complete Full-Stack Web Development Bootcamp',
-    provider: 'Udemy',
-    image: '/Certifications/full stack development.png',
-    description: 'A comprehensive course covering both frontend and backend technologies, including HTML, CSS, JavaScript, React, Node.js, and more.'
-  },
-  {
-    title: 'Software Development Lifecycle Fundamentals',
-    provider: 'Great Learning',
-    image: '/Certifications/SDLC principles.jpg',
-    description: 'An introduction to the software development lifecycle, covering methodologies, processes, and best practices for software development.'
-  }
-];
+import React, { useState, useEffect } from 'react';
+import axiosInstance from './axiosInstance';
 
 const Certifications = () => {
+  const [certifications, setCertifications] = useState([]);
   const [modalImage, setModalImage] = useState(null);
   const [modalTitle, setModalTitle] = useState('');
+
+  useEffect(() => {
+    axiosInstance.get("/api/certifications")
+      .then(res => setCertifications(res.data || []))
+      .catch(err => console.error("Error loading certifications:", err));
+  }, []);
 
   const openModal = (image, title) => {
     setModalImage(image);
@@ -48,7 +41,7 @@ const Certifications = () => {
       <div className="relative grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-7xl">
         {certifications.map((cert, index) => (
           <div 
-            key={index} 
+            key={cert._id || index} 
             className="group bg-white/5 backdrop-blur-sm rounded-2xl overflow-hidden border border-purple-500/20 hover:border-purple-500/50 transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl hover:shadow-purple-500/20"
           >
             {/* Image Container with Zoom Indicator */}
@@ -80,18 +73,18 @@ const Certifications = () => {
               {/* Provider Badge */}
               <div className="inline-flex items-center gap-2 px-3 py-1 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-full border border-purple-500/30 mb-3">
                 <svg className="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138z" />
                 </svg>
                 <span className="text-sm font-semibold text-purple-300">{cert.provider}</span>
               </div>
 
-              <p className="text-sm text-gray-300 leading-relaxed">{cert.description}</p>
+              <p className="text-sm text-gray-300 leading-relaxed min-h-[48px] line-clamp-3">{cert.description}</p>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Empty State Message (if needed for future) */}
+      {/* Empty State Message */}
       {certifications.length === 0 && (
         <div className="flex flex-col items-center justify-center py-20">
           <svg className="w-24 h-24 text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

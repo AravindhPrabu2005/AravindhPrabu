@@ -1,9 +1,11 @@
 import axios from 'axios';
 
-const axiosInstance = axios.create({
-    baseURL: 'https://api.aravindhprabu.me/',  
-});
-// aws url : https://api.aravindhprabu.me/
-// local url: http://localhost:5000
+const baseURL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://localhost:5000'
+    : 'https://api.aravindhprabu.me/';
 
-export default axiosInstance
+const axiosInstance = axios.create({
+    baseURL: baseURL,
+});
+
+export default axiosInstance;

@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import { Analytics } from "@vercel/analytics/react";
 import "./App.css";
@@ -17,13 +17,23 @@ import Experience from "./components/Experience";
 import Certifications from "./components/Certifications";
 import Achievements from "./components/Achievements";
 import AdminResumePage from "./components/Adminresume";
+import Login from "./components/Login";
+import ProtectedRoute from "./components/ProtectedRoute";
+import AdminLayout from "./components/AdminLayout";
+import ResumeSettings from "./components/ResumeSettings";
+import AdminProjects from "./components/AdminProjects";
+import AdminCertifications from "./components/AdminCertifications";
+import AdminAchievements from "./components/AdminAchievements";
+import AdminExperience from "./components/AdminExperience";
 
 function LayoutWrapper() {
   const location = useLocation();
   const hideHeaderFooter =
     location.pathname === "/allprojects" ||
     location.pathname === "/achivements" ||
-    location.pathname === "/certificates";
+    location.pathname === "/certificates" ||
+    location.pathname.startsWith("/admin") ||
+    location.pathname === "/adminresume";
 
   return (
     <div className="App">
@@ -44,11 +54,87 @@ function LayoutWrapper() {
             </>
           }
         />
-        <Route path="/admin" element={<Admin />} />
+        <Route path="/admin/login" element={<Login />} />
+        
+        {/* Redirect old routes to the consistent ones */}
+        <Route path="/admin" element={<Navigate to="/admin/messages" replace />} />
+        <Route path="/adminresume" element={<Navigate to="/admin/resume-requests" replace />} />
+        
+        {/* Protected Dashboard Routes */}
+        <Route 
+          path="/admin/messages" 
+          element={
+            <ProtectedRoute>
+              <AdminLayout>
+                <Admin />
+              </AdminLayout>
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/admin/resume-requests" 
+          element={
+            <ProtectedRoute>
+              <AdminLayout>
+                <AdminResumePage />
+              </AdminLayout>
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/admin/resume-settings" 
+          element={
+            <ProtectedRoute>
+              <AdminLayout>
+                <ResumeSettings />
+              </AdminLayout>
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/admin/projects" 
+          element={
+            <ProtectedRoute>
+              <AdminLayout>
+                <AdminProjects />
+              </AdminLayout>
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/admin/certifications" 
+          element={
+            <ProtectedRoute>
+              <AdminLayout>
+                <AdminCertifications />
+              </AdminLayout>
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/admin/achievements" 
+          element={
+            <ProtectedRoute>
+              <AdminLayout>
+                <AdminAchievements />
+              </AdminLayout>
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/admin/experience" 
+          element={
+            <ProtectedRoute>
+              <AdminLayout>
+                <AdminExperience />
+              </AdminLayout>
+            </ProtectedRoute>
+          } 
+        />
+
         <Route path="/allprojects" element={<Allprojects />} />
         <Route path="/certificates" element={<Certifications />} />
         <Route path="/achivements" element={<Achievements />} />
-        <Route path='/adminresume' element={<AdminResumePage />} />
       </Routes>
       {!hideHeaderFooter && <Footer />}
       <SpeedInsights />
