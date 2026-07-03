@@ -1,5 +1,4 @@
 import { useState } from "react"
-import ResumeImg from '../assets/resume.jpg'
 import axiosInstance from "./axiosInstance"
 import { XMarkIcon, DocumentArrowDownIcon, CheckCircleIcon } from '@heroicons/react/24/solid'
 
@@ -56,7 +55,7 @@ export default function Resume() {
                         {/* Image container */}
                         <div className="relative bg-slate-800 rounded-2xl p-2 overflow-hidden">
                             <img 
-                                src={ResumeImg} 
+                                src="/Resume.png" 
                                 alt="Resume preview"
                                 className="rounded-xl w-[300px] h-auto object-cover transform group-hover:scale-105 transition duration-500 shadow-2xl"
                             />
