@@ -78,13 +78,20 @@ export default function Resume() {
 
                     <button
                         onClick={() => setShowModal(true)}
-                        className="group relative px-8 py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold rounded-full overflow-hidden shadow-lg hover:shadow-purple-500/50 transition-all duration-300 hover:scale-105"
+                        className="group relative px-12 py-5 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-lg md:text-xl font-bold rounded-full overflow-hidden shadow-xl hover:shadow-purple-500/50 transition-all duration-300 hover:scale-110 pulse-glow"
                     >
                         <span className="absolute inset-0 bg-gradient-to-r from-pink-500 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></span>
+                        
+                        {/* Shimmer effect */}
+                        <span className="shimmer-effect"></span>
+                        
+                        {/* Pulsing ring */}
+                        <span className="pulse-ring"></span>
+                        
                         <span className="relative flex items-center gap-3">
                             <DocumentArrowDownIcon className="w-6 h-6" />
                             Download Resume
-                            <span className="group-hover:translate-x-1 transition-transform duration-300">→</span>
+                            <span className="group-hover:translate-x-2 transition-transform duration-300">→</span>
                         </span>
                     </button>
                 </div>
