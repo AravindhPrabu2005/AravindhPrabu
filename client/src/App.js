@@ -1,7 +1,9 @@
+import { useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import { Analytics } from "@vercel/analytics/react";
 import "./App.css";
+import axiosInstance from "./components/axiosInstance";
 import About from "./components/About";
 import Contact from "./components/Contact";
 import Footer from "./components/Footer";
@@ -25,9 +27,34 @@ import AdminProjects from "./components/AdminProjects";
 import AdminCertifications from "./components/AdminCertifications";
 import AdminAchievements from "./components/AdminAchievements";
 import AdminExperience from "./components/AdminExperience";
+import AdminVisitors from "./components/AdminVisitors";
 
 function LayoutWrapper() {
   const location = useLocation();
+
+  useEffect(() => {
+    // Only track visitors on the production domain (not localhost/127.0.0.1)
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    if (!isLocal) {
+      if (!sessionStorage.getItem("portfolio_visited")) {
+        const reportVisit = async () => {
+          try {
+            await axiosInstance.post("/api/visit", {
+              userAgent: navigator.userAgent,
+              referrer: document.referrer || "Direct",
+              screenResolution: `${window.screen.width}x${window.screen.height}`,
+              language: navigator.language,
+              path: window.location.pathname
+            });
+            sessionStorage.setItem("portfolio_visited", "true");
+          } catch (err) {
+            console.error("Failed to log visit:", err);
+          }
+        };
+        reportVisit();
+      }
+    }
+  }, []);
   const hideHeaderFooter =
     location.pathname === "/allprojects" ||
     location.pathname === "/achivements" ||
@@ -127,6 +154,16 @@ function LayoutWrapper() {
             <ProtectedRoute>
               <AdminLayout>
                 <AdminExperience />
+              </AdminLayout>
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/admin/visitors" 
+          element={
+            <ProtectedRoute>
+              <AdminLayout>
+                <AdminVisitors />
               </AdminLayout>
             </ProtectedRoute>
           } 

@@ -12,7 +12,8 @@ import {
     FaProjectDiagram,
     FaCertificate,
     FaAward,
-    FaBriefcase
+    FaBriefcase,
+    FaGlobe
 } from "react-icons/fa";
 
 export default function AdminLayout({ children }) {
@@ -68,6 +69,12 @@ export default function AdminLayout({ children }) {
             path: "/admin/experience",
             icon: FaBriefcase,
             desc: "Manage work experiences"
+        },
+        {
+            name: "Visitor Logs",
+            path: "/admin/visitors",
+            icon: FaGlobe,
+            desc: "Portfolio visitor logs"
         }
     ];
 

@@ -794,6 +794,140 @@ app.delete("/api/experiences/:id", async (req, res) => {
 });
 
 
+// ==========================================
+// VISITOR TRACKING ENDPOINTS
+// ==========================================
+
+const visitorSchema = new mongoose.Schema({
+  ip: String,
+  country: String,
+  city: String,
+  region: String,
+  isp: String,
+  userAgent: String,
+  referrer: String,
+  screenResolution: String,
+  language: String,
+  path: String,
+  visitedAt: { type: Date, default: Date.now }
+});
+
+const Visitor = mongoose.model("Visitor", visitorSchema);
+
+// POST visitor details (silent tracker)
+app.post("/api/visit", async (req, res) => {
+  try {
+    const { userAgent, referrer, screenResolution, language, path } = req.body;
+    
+    // Get IP from headers (behind Nginx proxy)
+    let ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    if (ip && ip.includes(',')) {
+      ip = ip.split(',')[0].trim();
+    }
+    
+    // Default fallback values
+    let country = "Unknown";
+    let city = "Unknown";
+    let region = "Unknown";
+    let isp = "Unknown";
+
+    // Perform geolocation lookup if it's not a local IP
+    if (ip && ip !== '::1' && ip !== '127.0.0.1' && !ip.startsWith('192.168.')) {
+      try {
+        const geoRes = await axios.get(`http://ip-api.com/json/${ip}`, { timeout: 3000 });
+        if (geoRes.data && geoRes.data.status === "success") {
+          country = geoRes.data.country || "Unknown";
+          city = geoRes.data.city || "Unknown";
+          region = geoRes.data.regionName || "Unknown";
+          isp = geoRes.data.isp || "Unknown";
+        }
+      } catch (geoErr) {
+        console.error("Geo IP lookup failed:", geoErr.message);
+      }
+    }
+
+    const visitor = await Visitor.create({
+      ip,
+      country,
+      city,
+      region,
+      isp,
+      userAgent,
+      referrer,
+      screenResolution,
+      language,
+      path
+    });
+
+    console.log(`[Visitor] New visit recorded from IP ${ip} (${city}, ${country})`);
+
+    // Send email notification to owner via Resend
+    try {
+      await resend.emails.send({
+        from: process.env.EMAIL_USER,
+        to: [NOTIFICATION_EMAIL],
+        subject: `🎯 New Portfolio Visit from ${city}, ${country}`,
+        html: `
+          <h3>New Visitor Recorded</h3>
+          <p><strong>Time:</strong> ${new Date().toLocaleString()}</p>
+          <p><strong>IP Address:</strong> ${ip}</p>
+          <p><strong>Estimated Location:</strong> ${city}, ${region}, ${country}</p>
+          <p><strong>Network / ISP:</strong> ${isp}</p>
+          <p><strong>Referrer:</strong> ${referrer}</p>
+          <p><strong>Screen:</strong> ${screenResolution}</p>
+          <p><strong>Language:</strong> ${language}</p>
+          <p><strong>Entry Path:</strong> ${path}</p>
+          <p><strong>User Agent:</strong> ${userAgent}</p>
+          <br/>
+          <p><a href="https://aravindhprabu.me/admin/visitors" style="display:inline-block;padding:10px 15px;background-color:#7c3aed;color:white;text-decoration:none;border-radius:8px;font-weight:bold;">View in Admin Panel</a></p>
+        `
+      });
+    } catch (mailErr) {
+      console.error("Failed to send visitor email notification:", mailErr.message);
+    }
+
+    res.status(201).json({ success: true, data: visitor });
+  } catch (error) {
+    console.error("Error logging visitor:", error.message);
+    res.status(500).json({ error: "Internal Server Error", details: error.message });
+  }
+});
+
+// GET all visitors (limited to latest 100)
+app.get("/api/visitors", async (req, res) => {
+  try {
+    const visitors = await Visitor.find().sort({ visitedAt: -1 }).limit(100);
+    res.json(visitors);
+  } catch (error) {
+    console.error("Error fetching visitors:", error.message);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+// DELETE clear all visitors
+app.delete("/api/visitors", async (req, res) => {
+  try {
+    await Visitor.deleteMany({});
+    res.json({ success: true, message: "All visitor logs cleared successfully" });
+  } catch (error) {
+    console.error("Error clearing visitor logs:", error.message);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+// DELETE single visitor log
+app.delete("/api/visitors/:id", async (req, res) => {
+  try {
+    await Visitor.findByIdAndDelete(req.params.id);
+    res.json({ success: true, message: "Visitor log deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting visitor log:", error.message);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+
+
 app.listen(PORT, () => {
   console.log("\n================================");
   console.log(`✓ Server running on port ${PORT}`);
