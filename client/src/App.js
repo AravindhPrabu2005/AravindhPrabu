@@ -38,13 +38,55 @@ function LayoutWrapper() {
     if (!isLocal) {
       if (!sessionStorage.getItem("portfolio_visited")) {
         const reportVisit = async () => {
+          let geoData = {
+            ip: "Unknown",
+            country: "Unknown",
+            city: "Unknown",
+            region: "Unknown",
+            isp: "Unknown"
+          };
+
+          // 1. Try primary geolocation service (ipapi.co supports HTTPS & CORS)
+          try {
+            const response = await fetch("https://ipapi.co/json/");
+            if (response.ok) {
+              const data = await response.json();
+              geoData = {
+                ip: data.ip || "Unknown",
+                country: data.country_name || "Unknown",
+                city: data.city || "Unknown",
+                region: data.region || "Unknown",
+                isp: data.org || "Unknown"
+              };
+            }
+          } catch (err) {
+            console.error("Primary client-side geolocation failed, attempting fallback...", err);
+            // 2. Try fallback geolocation service (freeipapi.com)
+            try {
+              const response = await fetch("https://freeipapi.com/api/json");
+              if (response.ok) {
+                const data = await response.json();
+                geoData = {
+                  ip: data.ipAddress || "Unknown",
+                  country: data.countryName || "Unknown",
+                  city: data.cityName || "Unknown",
+                  region: data.regionName || "Unknown",
+                  isp: "Unknown"
+                };
+              }
+            } catch (fallbackErr) {
+              console.error("Fallback geolocation failed:", fallbackErr);
+            }
+          }
+
           try {
             await axiosInstance.post("/api/visit", {
               userAgent: navigator.userAgent,
               referrer: document.referrer || "Direct",
               screenResolution: `${window.screen.width}x${window.screen.height}`,
               language: navigator.language,
-              path: window.location.pathname
+              path: window.location.pathname,
+              geoData // Send geolocation retrieved from client-side
             });
             sessionStorage.setItem("portfolio_visited", "true");
           } catch (err) {

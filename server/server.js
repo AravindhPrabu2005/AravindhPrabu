@@ -818,30 +818,33 @@ const Visitor = mongoose.model("Visitor", visitorSchema);
 // POST visitor details (silent tracker)
 app.post("/api/visit", async (req, res) => {
   try {
-    const { userAgent, referrer, screenResolution, language, path } = req.body;
+    const { userAgent, referrer, screenResolution, language, path, geoData } = req.body;
     
-    // Get IP from all possible headers (behind Nginx proxy)
-    let ip = req.headers['x-forwarded-for'] || 
-             req.headers['x-real-ip'] || 
-             req.ip || 
-             req.socket.remoteAddress;
-    if (ip) {
-      if (ip.includes(',')) {
-        ip = ip.split(',')[0].trim();
-      }
-      if (ip.startsWith("::ffff:")) {
-        ip = ip.substring(7);
+    // Extract IP and location details from the client-side payload
+    let ip = geoData?.ip || "Unknown";
+    let country = geoData?.country || "Unknown";
+    let city = geoData?.city || "Unknown";
+    let region = geoData?.region || "Unknown";
+    let isp = geoData?.isp || "Unknown";
+
+    // If client-side geolocation failed or returned default values, fallback to server-side request headers
+    if (ip === "Unknown" || ip === "") {
+      ip = req.headers['x-forwarded-for'] || 
+           req.headers['x-real-ip'] || 
+           req.ip || 
+           req.socket.remoteAddress;
+      if (ip) {
+        if (ip.includes(',')) {
+          ip = ip.split(',')[0].trim();
+        }
+        if (ip.startsWith("::ffff:")) {
+          ip = ip.substring(7);
+        }
       }
     }
-    
-    // Default fallback values
-    let country = "Unknown";
-    let city = "Unknown";
-    let region = "Unknown";
-    let isp = "Unknown";
 
-    // Perform geolocation lookup if it's not a local IP
-    if (ip && ip !== '::1' && ip !== '127.0.0.1' && !ip.startsWith('192.168.')) {
+    // If location is still unknown on server, perform server-side lookup as a fallback
+    if (city === "Unknown" && ip && ip !== '::1' && ip !== '127.0.0.1' && !ip.startsWith('192.168.')) {
       try {
         const geoRes = await axios.get(`http://ip-api.com/json/${ip}`, { timeout: 3000 });
         if (geoRes.data && geoRes.data.status === "success") {
@@ -851,13 +854,9 @@ app.post("/api/visit", async (req, res) => {
           isp = geoRes.data.isp || "Unknown";
         }
       } catch (geoErr) {
-        console.error("Geo IP lookup failed:", geoErr.message);
+        console.error("Geo IP lookup fallback failed:", geoErr.message);
       }
     }
-
-    // Check if IP has already visited to prevent notification spam
-    const existingVisit = await Visitor.findOne({ ip });
-    const isNewIP = !existingVisit;
 
     const visitor = await Visitor.create({
       ip,
@@ -872,36 +871,32 @@ app.post("/api/visit", async (req, res) => {
       path
     });
 
-    console.log(`[Visitor] New visit recorded from IP ${ip} (${city}, ${country}). New IP: ${isNewIP}`);
+    console.log(`[Visitor] New visit recorded: IP ${ip} (${city}, ${country})`);
 
-    // Send email notification to owner via Resend ONLY if this IP hasn't visited before
-    if (isNewIP) {
-      try {
-        await resend.emails.send({
-          from: process.env.EMAIL_USER,
-          to: [NOTIFICATION_EMAIL],
-          subject: `🎯 New Portfolio Visit from ${city}, ${country}`,
-          html: `
-            <h3>New Visitor Recorded</h3>
-            <p><strong>Time:</strong> ${new Date().toLocaleString()}</p>
-            <p><strong>IP Address:</strong> ${ip}</p>
-            <p><strong>Estimated Location:</strong> ${city}, ${region}, ${country}</p>
-            <p><strong>Network / ISP:</strong> ${isp}</p>
-            <p><strong>Referrer:</strong> ${referrer}</p>
-            <p><strong>Screen:</strong> ${screenResolution}</p>
-            <p><strong>Language:</strong> ${language}</p>
-            <p><strong>Entry Path:</strong> ${path}</p>
-            <p><strong>User Agent:</strong> ${userAgent}</p>
-            <br/>
-            <p><a href="https://aravindhprabu.me/admin/visitors" style="display:inline-block;padding:10px 15px;background-color:#7c3aed;color:white;text-decoration:none;border-radius:8px;font-weight:bold;">View in Admin Panel</a></p>
-          `
-        });
-        console.log("✓ Visitor email notification sent.");
-      } catch (mailErr) {
-        console.error("Failed to send visitor email notification:", mailErr.message);
-      }
-    } else {
-      console.log(`[Visitor] Returning IP ${ip} - email skipped.`);
+    // Send email notification to owner via Resend (always send on new visit session)
+    try {
+      await resend.emails.send({
+        from: process.env.EMAIL_USER,
+        to: [NOTIFICATION_EMAIL],
+        subject: `🎯 New Portfolio Visit from ${city}, ${country}`,
+        html: `
+          <h3>New Visitor Recorded</h3>
+          <p><strong>Time:</strong> ${new Date().toLocaleString()}</p>
+          <p><strong>IP Address:</strong> ${ip}</p>
+          <p><strong>Estimated Location:</strong> ${city}, ${region}, ${country}</p>
+          <p><strong>Network / ISP:</strong> ${isp}</p>
+          <p><strong>Referrer:</strong> ${referrer}</p>
+          <p><strong>Screen:</strong> ${screenResolution}</p>
+          <p><strong>Language:</strong> ${language}</p>
+          <p><strong>Entry Path:</strong> ${path}</p>
+          <p><strong>User Agent:</strong> ${userAgent}</p>
+          <br/>
+          <p><a href="https://aravindhprabu.me/admin/visitors" style="display:inline-block;padding:10px 15px;background-color:#7c3aed;color:white;text-decoration:none;border-radius:8px;font-weight:bold;">View in Admin Panel</a></p>
+        `
+      });
+      console.log("✓ Visitor email notification sent successfully.");
+    } catch (mailErr) {
+      console.error("Failed to send visitor email notification:", mailErr.message);
     }
 
     res.status(201).json({ success: true, data: visitor });
