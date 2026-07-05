@@ -31,26 +31,26 @@ export default function Login() {
     };
 
     return (
-        <section className="relative min-h-screen flex items-center justify-center px-4 py-20 bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 overflow-hidden">
+        <section className="relative min-h-screen flex items-center justify-center px-4 py-20 bg-slate-50 overflow-hidden">
             {/* Background glowing decorations */}
             <div className="absolute inset-0 overflow-hidden">
-                <div className="absolute w-[500px] h-[500px] -top-64 -left-64 bg-purple-600 rounded-full mix-blend-multiply filter blur-3xl opacity-15"></div>
-                <div className="absolute w-[500px] h-[500px] -bottom-64 -right-64 bg-pink-600 rounded-full mix-blend-multiply filter blur-3xl opacity-15"></div>
+                <div className="absolute w-[500px] h-[500px] -top-64 -left-64 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-10"></div>
+                <div className="absolute w-[500px] h-[500px] -bottom-64 -right-64 bg-pink-400 rounded-full mix-blend-multiply filter blur-3xl opacity-10"></div>
             </div>
 
             {/* Login Card */}
-            <div className="relative z-10 w-full max-w-md bg-white/5 backdrop-blur-md rounded-3xl p-8 border border-purple-500/20 shadow-2xl shadow-purple-500/10">
+            <div className="relative z-10 w-full max-w-md bg-white rounded-3xl p-8 border border-slate-200/80 shadow-2xl shadow-slate-100/50">
                 <div className="text-center mb-8">
-                    <h1 className="text-3xl font-extrabold tracking-tight text-white mb-2">
-                        Admin <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">Portal</span>
+                    <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 mb-2">
+                        Admin <span className="text-indigo-600">Portal</span>
                     </h1>
-                    <p className="text-gray-400 text-sm">Sign in to access your dashboard</p>
+                    <p className="text-slate-500 text-sm">Sign in to access your dashboard</p>
                 </div>
 
                 <form onSubmit={handleLogin} className="space-y-6">
                     {/* Email Input */}
                     <div>
-                        <label className="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-2">
+                        <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">
                             Email Address
                         </label>
                         <input
@@ -59,13 +59,13 @@ export default function Login() {
                             placeholder="aravindhprabu2005@gmail.com"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            className="w-full px-4 py-3 bg-slate-900/50 border border-purple-500/30 rounded-xl text-sm text-white placeholder-gray-600 focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-500/20 transition-all duration-300"
+                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-all duration-300"
                         />
                     </div>
 
                     {/* Password Input */}
                     <div>
-                        <label className="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-2">
+                        <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">
                             Password
                         </label>
                         <div className="relative">
@@ -75,12 +75,12 @@ export default function Login() {
                                 placeholder="••••••••"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="w-full pl-4 pr-12 py-3 bg-slate-900/50 border border-purple-500/30 rounded-xl text-sm text-white placeholder-gray-600 focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-500/20 transition-all duration-300"
+                                className="w-full pl-4 pr-12 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-all duration-300"
                             />
                             <button
                                 type="button"
                                 onClick={() => setShowPassword(!showPassword)}
-                                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 transition-colors"
                             >
                                 {showPassword ? <FaEyeSlash size={18} /> : <FaEye size={18} />}
                             </button>
@@ -89,8 +89,8 @@ export default function Login() {
 
                     {/* Error Banner */}
                     {error && (
-                        <div className="flex items-center gap-2 p-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-sm font-medium animate-shake">
-                            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div className="flex items-center gap-2 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm font-medium animate-shake">
+                            <svg className="w-5 h-5 flex-shrink-0 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                             </svg>
                             <span>{error}</span>
@@ -101,7 +101,7 @@ export default function Login() {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full py-3.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold rounded-xl hover:from-purple-600 hover:to-pink-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/30 flex items-center justify-center gap-2 text-sm"
+                        className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-sm shadow-indigo-500/10 hover:shadow-md hover:shadow-indigo-500/20 flex items-center justify-center gap-2 text-sm"
                     >
                         {loading ? (
                             <>

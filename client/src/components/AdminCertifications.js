@@ -135,12 +135,12 @@ export default function AdminCertifications() {
             {/* Header section */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-xl font-bold text-white">Manage Certifications</h2>
-                    <p className="text-xs text-gray-400">Configure your credentials, online courses, and certificates</p>
+                    <h2 className="text-xl font-bold text-slate-900">Manage Certifications</h2>
+                    <p className="text-xs text-slate-500">Configure your credentials, online courses, and certificates</p>
                 </div>
                 <button
                     onClick={openCreateModal}
-                    className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl text-xs font-semibold hover:shadow-lg hover:shadow-purple-500/25 active:scale-95 transition-all cursor-pointer"
+                    className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-xs shadow-indigo-500/10 hover:shadow-md hover:shadow-indigo-500/20 active:scale-95 transition-all cursor-pointer"
                 >
                     <FaPlus />
                     <span>Add Certification</span>
@@ -149,12 +149,12 @@ export default function AdminCertifications() {
 
             {/* Notification Banner */}
             {successMessage && (
-                <div className="p-4 bg-green-500/10 border border-green-500/30 text-green-400 rounded-2xl text-sm font-medium transition-all">
+                <div className="p-4 bg-green-50 border border-green-200 text-green-700 rounded-2xl text-sm font-medium transition-all shadow-xs animate-slideDown">
                     {successMessage}
                 </div>
             )}
             {error && (
-                <div className="p-4 bg-red-500/10 border border-red-500/30 text-red-400 rounded-2xl text-sm font-medium transition-all">
+                <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-2xl text-sm font-medium transition-all shadow-xs animate-slideDown">
                     {error}
                 </div>
             )}
@@ -164,9 +164,9 @@ export default function AdminCertifications() {
                 {certifications.map((cert) => (
                     <div 
                         key={cert._id}
-                        className="bg-white/5 border border-purple-500/10 rounded-2xl overflow-hidden hover:border-purple-500/20 transition-all flex flex-col group"
+                        className="bg-white border border-slate-200/80 rounded-2xl overflow-hidden hover:border-slate-355 shadow-xs transition-all flex flex-col group"
                     >
-                        <div className="relative h-44 overflow-hidden bg-slate-900 flex justify-center items-center p-4">
+                        <div className="relative h-44 overflow-hidden bg-slate-50/50 flex justify-center items-center p-4">
                             <img 
                                 src={cert.image} 
                                 alt={cert.title} 
@@ -176,27 +176,27 @@ export default function AdminCertifications() {
 
                         <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
                             <div className="space-y-2">
-                                <h3 className="text-base font-bold text-white leading-tight">{cert.title}</h3>
+                                <h3 className="text-base font-bold text-slate-800 leading-tight">{cert.title}</h3>
                                 
-                                <div className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-purple-500/10 border border-purple-500/20 text-purple-300 rounded-md text-[10px] font-semibold">
-                                    <FaAward className="text-purple-400" /> {cert.provider}
+                                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-slate-50 border border-slate-200 text-slate-650 rounded-md text-[10px] font-semibold">
+                                    <FaAward className="text-slate-500" /> {cert.provider}
                                 </div>
                                 
-                                <p className="text-xs text-gray-400 line-clamp-3 leading-relaxed pt-1">{cert.description}</p>
+                                <p className="text-xs text-slate-500 line-clamp-3 leading-relaxed pt-1">{cert.description}</p>
                             </div>
 
-                            <div className="flex items-center justify-end border-t border-white/5 pt-4">
+                            <div className="flex items-center justify-end border-t border-slate-100 pt-4">
                                 <div className="flex items-center gap-2">
                                     <button 
                                         onClick={() => openEditModal(cert)}
-                                        className="p-2 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 hover:text-purple-300 rounded-lg border border-purple-500/20 transition-all cursor-pointer"
+                                        className="p-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 hover:text-indigo-700 rounded-lg border border-indigo-100 transition-all cursor-pointer"
                                         aria-label="Edit certification"
                                     >
                                         <FaEdit size={12} />
                                     </button>
                                     <button 
                                         onClick={() => handleDelete(cert._id)}
-                                        className="p-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 rounded-lg border border-red-500/20 transition-all cursor-pointer"
+                                        className="p-2 bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 rounded-lg border border-red-100 transition-all cursor-pointer"
                                         aria-label="Delete certification"
                                     >
                                         <FaTrash size={12} />
@@ -208,7 +208,7 @@ export default function AdminCertifications() {
                 ))}
 
                 {certifications.length === 0 && (
-                    <div className="col-span-full py-16 text-center text-gray-500 border border-dashed border-purple-500/20 rounded-2xl bg-white/5">
+                    <div className="col-span-full py-16 text-center text-slate-500 border border-dashed border-slate-200 rounded-2xl bg-white shadow-xs">
                         No certifications found. Click "Add Certification" to create one.
                     </div>
                 )}
@@ -216,15 +216,15 @@ export default function AdminCertifications() {
 
             {/* Modal Dialog */}
             {modalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
-                    <div className="bg-slate-900 border border-purple-500/20 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl">
-                        <div className="flex items-center justify-between px-6 py-4 border-b border-white/5">
-                            <h3 className="text-base font-bold text-white">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-fadeIn">
+                    <div className="bg-white border border-slate-200/80 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl">
+                        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+                            <h3 className="text-base font-bold text-slate-900">
                                 {editMode ? "Edit Certification Info" : "Create Certification Card"}
                             </h3>
                             <button 
                                 onClick={() => setModalOpen(false)}
-                                className="p-1.5 bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white rounded-lg transition-colors cursor-pointer"
+                                className="p-1.5 bg-slate-50 hover:bg-slate-100 text-slate-400 hover:text-slate-700 rounded-lg transition-colors cursor-pointer"
                             >
                                 <FaTimes />
                             </button>
@@ -232,69 +232,69 @@ export default function AdminCertifications() {
 
                         <form onSubmit={handleSubmit} className="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
                             <div>
-                                <label className="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-2">Certification Title</label>
+                                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">Certification Title</label>
                                 <input 
                                     type="text" 
                                     required
                                     value={title}
                                     onChange={(e) => setTitle(e.target.value)}
                                     placeholder="Full-Stack Web Development Bootcamp"
-                                    className="w-full px-4 py-2.5 bg-slate-950 border border-purple-500/20 rounded-xl text-sm text-white focus:outline-none focus:border-purple-400 transition-all"
+                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-all shadow-inner"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-2">Provider / Issuer</label>
+                                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">Provider / Issuer</label>
                                 <input 
                                     type="text" 
                                     required
                                     value={provider}
                                     onChange={(e) => setProvider(e.target.value)}
                                     placeholder="Udemy, Coursera, Great Learning"
-                                    className="w-full px-4 py-2.5 bg-slate-950 border border-purple-500/20 rounded-xl text-sm text-white focus:outline-none focus:border-purple-400 transition-all"
+                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-all shadow-inner"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-2">Short Description</label>
+                                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">Short Description</label>
                                 <textarea 
                                     value={description}
                                     onChange={(e) => setDescription(e.target.value)}
                                     placeholder="A comprehensive course covering React, Node.js..."
                                     rows={3}
-                                    className="w-full px-4 py-2.5 bg-slate-950 border border-purple-500/20 rounded-xl text-sm text-white focus:outline-none focus:border-purple-400 transition-all resize-none"
+                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-all resize-none shadow-inner"
                                 />
                             </div>
 
                             {/* Image selector */}
                             <div>
-                                <label className="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-2">Certificate Image / PNG</label>
+                                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">Certificate Image / PNG</label>
                                 <input 
                                     type="file" 
                                     accept="image/*"
                                     onChange={handleImageChange}
-                                    className="w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-purple-500/10 file:text-purple-400 hover:file:bg-purple-500/20 file:transition-colors file:cursor-pointer"
+                                    className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-600 hover:file:bg-indigo-100 file:transition-colors file:cursor-pointer"
                                 />
 
                                 {imagePreview && (
-                                    <div className="mt-3 relative h-36 rounded-xl overflow-hidden border border-purple-500/20 bg-slate-950 p-2 flex justify-center items-center">
+                                    <div className="mt-3 relative h-36 rounded-xl overflow-hidden border border-slate-200 bg-slate-50 p-2 flex justify-center items-center shadow-inner">
                                         <img src={imagePreview} alt="Preview" className="max-h-full max-w-full object-contain" />
                                     </div>
                                 )}
                             </div>
 
-                            <div className="flex items-center justify-end gap-3 border-t border-white/5 pt-4 mt-6">
+                            <div className="flex items-center justify-end gap-3 border-t border-slate-100 pt-4 mt-6">
                                 <button 
                                     type="button"
                                     onClick={() => setModalOpen(false)}
-                                    className="px-4 py-2.5 bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white rounded-xl text-xs font-semibold transition-colors cursor-pointer"
+                                    className="px-4 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-655 hover:text-slate-800 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
                                 >
                                     Cancel
                                 </button>
                                 <button 
                                     type="submit"
                                     disabled={loading}
-                                    className="px-5 py-2.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl text-xs font-semibold hover:shadow-lg hover:shadow-purple-500/25 transition-all disabled:opacity-50 cursor-pointer"
+                                    className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl text-xs shadow-xs shadow-indigo-500/10 hover:shadow-md hover:shadow-indigo-500/20 transition-all disabled:opacity-50 cursor-pointer"
                                 >
                                     {loading ? "Saving Card..." : "Save Certification"}
                                 </button>

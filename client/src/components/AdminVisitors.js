@@ -79,8 +79,8 @@ export default function AdminVisitors() {
         <div className="w-full space-y-6">
             {loading ? (
                 <div className="flex items-center justify-center py-20">
-                    <div className="flex items-center gap-3 text-gray-400">
-                        <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <div className="flex items-center gap-3 text-slate-500">
+                        <svg className="animate-spin h-5 w-5 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
@@ -92,18 +92,18 @@ export default function AdminVisitors() {
                     {/* Header bar with Stats & Clear all */}
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div className="flex items-center gap-3">
-                            <div className="p-2.5 bg-purple-500/10 rounded-xl border border-purple-500/20 text-purple-400">
+                            <div className="p-2.5 bg-indigo-50 rounded-xl border border-indigo-100 text-indigo-600">
                                 <FaGlobe className="w-5 h-5 animate-pulse" />
                             </div>
                             <div>
-                                <h2 className="text-lg font-bold text-white">Visitor Logs</h2>
-                                <p className="text-xs text-gray-400">Logged session visits: {visitors.length}</p>
+                                <h2 className="text-lg font-bold text-slate-900">Visitor Logs</h2>
+                                <p className="text-xs text-slate-500">Logged session visits: {visitors.length}</p>
                             </div>
                         </div>
                         {visitors.length > 0 && (
                             <button
                                 onClick={handleClearAll}
-                                className="flex items-center justify-center gap-2 px-4 py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-red-500/20 rounded-xl text-xs font-semibold transition-all duration-300 active:scale-95 cursor-pointer"
+                                className="flex items-center justify-center gap-2 px-4 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 border border-red-100 rounded-xl text-xs font-semibold transition-all duration-300 active:scale-95 cursor-pointer"
                             >
                                 <FaTrashAlt />
                                 <span>Clear All Logs</span>
@@ -112,16 +112,16 @@ export default function AdminVisitors() {
                     </div>
 
                     {visitors.length === 0 ? (
-                        <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-purple-500/10 p-12 text-center">
-                            <FaGlobe className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-                            <p className="text-gray-400">No visitor logs recorded yet</p>
+                        <div className="bg-white rounded-2xl border border-slate-200/80 p-12 text-center shadow-xs">
+                            <FaGlobe className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                            <p className="text-slate-500 font-medium text-sm">No visitor logs recorded yet</p>
                         </div>
                     ) : (
-                        <div className="bg-white/5 backdrop-blur-md rounded-2xl border border-purple-500/10 overflow-hidden shadow-xl">
+                        <div className="bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-xs">
                             <div className="overflow-x-auto">
                                 <table className="w-full border-collapse">
                                     <thead>
-                                        <tr className="bg-purple-950/20 border-b border-purple-500/10 text-left text-xs font-semibold text-purple-300 uppercase tracking-wider">
+                                        <tr className="bg-slate-55 border-b border-slate-200/80 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
                                             <th className="px-6 py-4">Date & Time</th>
                                             <th className="px-6 py-4">Location & ISP</th>
                                             <th className="px-6 py-4">IP Address</th>
@@ -130,13 +130,13 @@ export default function AdminVisitors() {
                                             <th className="px-6 py-4 text-center">Action</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-purple-500/10 text-sm">
+                                    <tbody className="divide-y divide-slate-100 text-sm">
                                         {visitors.map((visitor) => (
-                                            <tr key={visitor._id} className="hover:bg-purple-500/5 transition-colors duration-200">
+                                            <tr key={visitor._id} className="hover:bg-slate-50/40 transition-colors duration-200">
                                                 {/* Date & Time */}
                                                 <td className="px-6 py-4 whitespace-nowrap">
-                                                    <div className="flex items-center gap-2 text-gray-300">
-                                                        <FaCalendarAlt className="text-purple-400/70" size={12} />
+                                                    <div className="flex items-center gap-2 text-slate-600">
+                                                        <FaCalendarAlt className="text-slate-400" size={12} />
                                                         <span className="font-medium text-xs">
                                                             {formatTimestamp(visitor.visitedAt)}
                                                         </span>
@@ -147,15 +147,15 @@ export default function AdminVisitors() {
                                                 <td className="px-6 py-4">
                                                     <div className="space-y-1">
                                                         <div className="flex items-center gap-1.5">
-                                                            <span className="font-semibold text-white">
+                                                            <span className="font-semibold text-slate-800">
                                                                 {visitor.city || "Unknown City"}
                                                             </span>
-                                                            <span className="text-xs text-purple-300 bg-purple-500/10 border border-purple-500/20 px-2 py-0.5 rounded-full">
+                                                            <span className="text-[10px] font-semibold text-indigo-650 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded-full">
                                                                 {visitor.country || "Unknown Country"}
                                                             </span>
                                                         </div>
-                                                        <div className="flex items-center gap-1 text-[10px] text-gray-400">
-                                                            <FaNetworkWired size={10} className="text-pink-400/70" />
+                                                        <div className="flex items-center gap-1 text-[10px] text-slate-450">
+                                                            <FaNetworkWired size={10} className="text-slate-400" />
                                                             <span className="truncate max-w-[200px]">{visitor.isp || "Unknown ISP"}</span>
                                                         </div>
                                                     </div>
@@ -163,7 +163,7 @@ export default function AdminVisitors() {
 
                                                 {/* IP Address */}
                                                 <td className="px-6 py-4 whitespace-nowrap">
-                                                    <code className="text-xs text-pink-300 font-mono bg-pink-500/5 border border-pink-500/10 px-2 py-1 rounded">
+                                                    <code className="text-xs text-slate-850 font-mono bg-slate-50 border border-slate-200 px-2 py-1 rounded">
                                                         {visitor.ip || "Unknown"}
                                                     </code>
                                                 </td>
@@ -171,19 +171,19 @@ export default function AdminVisitors() {
                                                 {/* Device / Client */}
                                                 <td className="px-6 py-4">
                                                     <div className="space-y-1.5">
-                                                        <div className="flex items-center gap-1.5 text-gray-200 text-xs font-semibold">
-                                                            <FaLaptop className="text-purple-400" size={12} />
+                                                        <div className="flex items-center gap-1.5 text-slate-800 text-xs font-bold">
+                                                            <FaLaptop className="text-slate-400" size={12} />
                                                             <span>{getDeviceDescription(visitor.userAgent)}</span>
                                                         </div>
-                                                        <div className="text-xs text-gray-300">
-                                                            Browser: <span className="text-pink-300 font-medium">{getBrowserDescription(visitor.userAgent)}</span>
+                                                        <div className="text-xs text-slate-600">
+                                                            Browser: <span className="text-indigo-600 font-semibold">{getBrowserDescription(visitor.userAgent)}</span>
                                                         </div>
-                                                        <div className="text-[10px] text-purple-400 font-mono">
+                                                        <div className="text-[10px] text-slate-500 font-semibold font-mono">
                                                             Screen: {visitor.screenResolution || "Unknown"} | Lang: {visitor.language || "Unknown"}
                                                         </div>
                                                          {/* Raw User Agent - fully wraps and allows click-to-copy */}
                                                          <div 
-                                                             className="text-[10px] text-gray-400 font-mono bg-slate-950/40 border border-white/5 p-2 rounded-lg max-w-[280px] break-all whitespace-normal leading-normal select-all cursor-pointer hover:bg-slate-900/60 transition-colors" 
+                                                             className="text-[10px] text-slate-500 font-mono bg-slate-50 border border-slate-200 p-2.5 rounded-lg max-w-[280px] break-all whitespace-normal leading-normal select-all cursor-pointer hover:bg-slate-100/60 transition-colors shadow-inner" 
                                                              onClick={() => {
                                                                  navigator.clipboard.writeText(visitor.userAgent);
                                                                  alert("User Agent copied to clipboard!");
@@ -192,17 +192,17 @@ export default function AdminVisitors() {
                                                          >
                                                              {visitor.userAgent || "Unknown UA"}
                                                          </div>
-                                                    </div>
+                                                     </div>
                                                 </td>
 
                                                 {/* Referrer / Entry */}
-                                                <td className="px-6 py-4 text-xs text-gray-300">
+                                                <td className="px-6 py-4 text-xs text-slate-650">
                                                     <div className="space-y-1">
-                                                        <span className="px-2.5 py-1 bg-white/5 rounded-lg border border-white/5 text-[11px] font-semibold text-purple-300 truncate max-w-[150px] inline-block">
+                                                        <span className="px-2.5 py-1 bg-slate-50 rounded-lg border border-slate-200 text-[11px] font-bold text-slate-700 truncate max-w-[150px] inline-block shadow-xs">
                                                             {visitor.referrer === "Direct" ? "Direct Access" : visitor.referrer}
                                                         </span>
-                                                        <div className="text-[10px] text-gray-500">
-                                                            Path: <span className="font-mono text-purple-400/80">{visitor.path || "/"}</span>
+                                                        <div className="text-[10px] text-slate-450">
+                                                            Path: <span className="font-mono text-indigo-650">{visitor.path || "/"}</span>
                                                         </div>
                                                     </div>
                                                 </td>
@@ -211,7 +211,7 @@ export default function AdminVisitors() {
                                                 <td className="px-6 py-4 whitespace-nowrap text-center">
                                                     <button
                                                         onClick={() => handleDelete(visitor._id)}
-                                                        className="p-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-red-500/20 rounded-lg transition-all duration-300 active:scale-95 cursor-pointer"
+                                                        className="p-2 bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 border border-red-100 rounded-lg transition-all duration-300 active:scale-95 cursor-pointer"
                                                         title="Delete entry"
                                                     >
                                                         <FaTrash size={12} />
