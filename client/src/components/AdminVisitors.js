@@ -181,10 +181,17 @@ export default function AdminVisitors() {
                                                         <div className="text-[10px] text-purple-400 font-mono">
                                                             Screen: {visitor.screenResolution || "Unknown"} | Lang: {visitor.language || "Unknown"}
                                                         </div>
-                                                        {/* Raw User Agent - wrapped inside a small readable scrollbox */}
-                                                        <div className="text-[9px] text-gray-500 font-mono bg-slate-950/40 border border-white/5 p-2 rounded-lg max-w-[280px] break-all leading-normal max-h-[60px] overflow-y-auto scrollbar-hide" title={visitor.userAgent}>
-                                                            {visitor.userAgent || "Unknown UA"}
-                                                        </div>
+                                                         {/* Raw User Agent - fully wraps and allows click-to-copy */}
+                                                         <div 
+                                                             className="text-[10px] text-gray-400 font-mono bg-slate-950/40 border border-white/5 p-2 rounded-lg max-w-[280px] break-all whitespace-normal leading-normal select-all cursor-pointer hover:bg-slate-900/60 transition-colors" 
+                                                             onClick={() => {
+                                                                 navigator.clipboard.writeText(visitor.userAgent);
+                                                                 alert("User Agent copied to clipboard!");
+                                                             }}
+                                                             title="Click to copy User Agent"
+                                                         >
+                                                             {visitor.userAgent || "Unknown UA"}
+                                                         </div>
                                                     </div>
                                                 </td>
 
