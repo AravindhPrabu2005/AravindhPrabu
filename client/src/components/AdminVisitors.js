@@ -96,7 +96,7 @@ export default function AdminVisitors() {
                                 <FaGlobe className="w-5 h-5 animate-pulse" />
                             </div>
                             <div>
-                                <h2 className="text-lg font-bold text-slate-900">Visitor Logs</h2>
+                                <h2 className="text-lg font-bold text-slate-900">Manage Visitor Logs</h2>
                                 <p className="text-xs text-slate-500">Logged session visits: {visitors.length}</p>
                             </div>
                         </div>

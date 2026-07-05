@@ -67,7 +67,7 @@ export default function AdminResumePage() {
                 <FaFileAlt className="w-5 h-5" />
               </div>
               <div>
-                <h2 className="text-lg font-bold text-slate-900">Resume Requests</h2>
+                <h2 className="text-lg font-bold text-slate-900">Manage Resume Requests</h2>
                 <p className="text-xs text-slate-500">Total requested: {emails.length} ({pending.length} pending, {history.length} reviewed)</p>
               </div>
             </div>

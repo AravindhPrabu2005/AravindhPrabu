@@ -78,7 +78,9 @@ export default function AdminLayout({ children }) {
         }
     ];
 
-    const currentTabName = navigationItems.find(item => item.path === location.pathname)?.name || "Dashboard";
+    const currentTabItem = navigationItems.find(item => item.path === location.pathname);
+    const currentTabName = currentTabItem?.name || "Dashboard";
+    const currentTabDesc = currentTabItem?.desc || "Management and moderation panel";
 
     return (
         <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col md:flex-row">
@@ -173,7 +175,7 @@ export default function AdminLayout({ children }) {
                 <header className="hidden md:flex h-20 border-b border-slate-200/80 items-center justify-between px-8 bg-white shadow-xs">
                     <div>
                         <h1 className="text-xl font-bold text-slate-900">{currentTabName}</h1>
-                        <p className="text-xs text-slate-500 mt-1">Management and moderation panel</p>
+                        <p className="text-xs text-slate-500 mt-1">{currentTabDesc}</p>
                     </div>
                     <Link 
                         to="/"
