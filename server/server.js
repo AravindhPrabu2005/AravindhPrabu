@@ -12,6 +12,7 @@ const cloudinary = require("cloudinary").v2;
 const multer = require("multer");
 
 const app = express();
+app.set("trust proxy", true);
 const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(bodyParser.json());
@@ -819,10 +820,18 @@ app.post("/api/visit", async (req, res) => {
   try {
     const { userAgent, referrer, screenResolution, language, path } = req.body;
     
-    // Get IP from headers (behind Nginx proxy)
-    let ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-    if (ip && ip.includes(',')) {
-      ip = ip.split(',')[0].trim();
+    // Get IP from all possible headers (behind Nginx proxy)
+    let ip = req.headers['x-forwarded-for'] || 
+             req.headers['x-real-ip'] || 
+             req.ip || 
+             req.socket.remoteAddress;
+    if (ip) {
+      if (ip.includes(',')) {
+        ip = ip.split(',')[0].trim();
+      }
+      if (ip.startsWith("::ffff:")) {
+        ip = ip.substring(7);
+      }
     }
     
     // Default fallback values
@@ -846,6 +855,10 @@ app.post("/api/visit", async (req, res) => {
       }
     }
 
+    // Check if IP has already visited to prevent notification spam
+    const existingVisit = await Visitor.findOne({ ip });
+    const isNewIP = !existingVisit;
+
     const visitor = await Visitor.create({
       ip,
       country,
@@ -859,31 +872,36 @@ app.post("/api/visit", async (req, res) => {
       path
     });
 
-    console.log(`[Visitor] New visit recorded from IP ${ip} (${city}, ${country})`);
+    console.log(`[Visitor] New visit recorded from IP ${ip} (${city}, ${country}). New IP: ${isNewIP}`);
 
-    // Send email notification to owner via Resend
-    try {
-      await resend.emails.send({
-        from: process.env.EMAIL_USER,
-        to: [NOTIFICATION_EMAIL],
-        subject: `🎯 New Portfolio Visit from ${city}, ${country}`,
-        html: `
-          <h3>New Visitor Recorded</h3>
-          <p><strong>Time:</strong> ${new Date().toLocaleString()}</p>
-          <p><strong>IP Address:</strong> ${ip}</p>
-          <p><strong>Estimated Location:</strong> ${city}, ${region}, ${country}</p>
-          <p><strong>Network / ISP:</strong> ${isp}</p>
-          <p><strong>Referrer:</strong> ${referrer}</p>
-          <p><strong>Screen:</strong> ${screenResolution}</p>
-          <p><strong>Language:</strong> ${language}</p>
-          <p><strong>Entry Path:</strong> ${path}</p>
-          <p><strong>User Agent:</strong> ${userAgent}</p>
-          <br/>
-          <p><a href="https://aravindhprabu.me/admin/visitors" style="display:inline-block;padding:10px 15px;background-color:#7c3aed;color:white;text-decoration:none;border-radius:8px;font-weight:bold;">View in Admin Panel</a></p>
-        `
-      });
-    } catch (mailErr) {
-      console.error("Failed to send visitor email notification:", mailErr.message);
+    // Send email notification to owner via Resend ONLY if this IP hasn't visited before
+    if (isNewIP) {
+      try {
+        await resend.emails.send({
+          from: process.env.EMAIL_USER,
+          to: [NOTIFICATION_EMAIL],
+          subject: `🎯 New Portfolio Visit from ${city}, ${country}`,
+          html: `
+            <h3>New Visitor Recorded</h3>
+            <p><strong>Time:</strong> ${new Date().toLocaleString()}</p>
+            <p><strong>IP Address:</strong> ${ip}</p>
+            <p><strong>Estimated Location:</strong> ${city}, ${region}, ${country}</p>
+            <p><strong>Network / ISP:</strong> ${isp}</p>
+            <p><strong>Referrer:</strong> ${referrer}</p>
+            <p><strong>Screen:</strong> ${screenResolution}</p>
+            <p><strong>Language:</strong> ${language}</p>
+            <p><strong>Entry Path:</strong> ${path}</p>
+            <p><strong>User Agent:</strong> ${userAgent}</p>
+            <br/>
+            <p><a href="https://aravindhprabu.me/admin/visitors" style="display:inline-block;padding:10px 15px;background-color:#7c3aed;color:white;text-decoration:none;border-radius:8px;font-weight:bold;">View in Admin Panel</a></p>
+          `
+        });
+        console.log("✓ Visitor email notification sent.");
+      } catch (mailErr) {
+        console.error("Failed to send visitor email notification:", mailErr.message);
+      }
+    } else {
+      console.log(`[Visitor] Returning IP ${ip} - email skipped.`);
     }
 
     res.status(201).json({ success: true, data: visitor });
