@@ -75,16 +75,8 @@ export default function AdminResumePage() {
 
           {/* Pending Requests Section */}
           <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-yellow-50 rounded-xl border border-yellow-100 text-yellow-600">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <div>
-                <h2 className="text-lg font-bold text-slate-900">Pending Requests</h2>
-                <p className="text-xs text-slate-500">Needs review: {pending.length}</p>
-              </div>
+            <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+              <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Pending Requests ({pending.length})</h3>
             </div>
 
             {pending.length === 0 ? (
@@ -97,7 +89,7 @@ export default function AdminResumePage() {
             ) : (
               <div className="grid gap-4">
                 {pending.map(email => (
-                  <div key={email._id} className="bg-white rounded-2xl border border-slate-200/80 p-5 hover:border-slate-350 shadow-xs transition-all duration-300">
+                  <div key={email._id} className="bg-white rounded-2xl border border-slate-200/80 p-5 hover:border-slate-355 shadow-xs transition-all duration-300">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                       <div className="flex items-center gap-3 flex-1 min-w-0">
                         <div className="flex-shrink-0 w-11 h-11 bg-slate-50 rounded-xl flex items-center justify-center border border-slate-200">
@@ -140,18 +132,8 @@ export default function AdminResumePage() {
 
           {/* History Section */}
           <div className="space-y-4 pt-4">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-indigo-50 rounded-xl border border-indigo-100 text-indigo-600">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <div>
-                  <h2 className="text-lg font-bold text-slate-900">History</h2>
-                  <p className="text-xs text-slate-500">Reviewed: {history.length}</p>
-                </div>
-              </div>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-100 pb-2.5">
+              <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Request History ({history.length})</h3>
               {history.length > 0 && (
                 <button
                   onClick={handleClearHistory}
