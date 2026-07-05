@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import axiosInstance from "./axiosInstance";
-import { FaPlus, FaTrash, FaEdit, FaTimes, FaCalendarAlt, FaMapMarkerAlt } from "react-icons/fa";
+import { FaPlus, FaTrash, FaEdit, FaTimes, FaCalendarAlt, FaMapMarkerAlt, FaBriefcase } from "react-icons/fa";
 
 export default function AdminExperience() {
     const [experiences, setExperiences] = useState([]);
@@ -158,10 +158,15 @@ export default function AdminExperience() {
     return (
         <div className="w-full space-y-6">
             {/* Header section */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <h2 className="text-xl font-bold text-slate-900">Manage Experience</h2>
-                    <p className="text-xs text-slate-500">Configure your professional timeline, internships, and freelancing entries</p>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-100 pb-5">
+                <div className="flex items-center gap-3">
+                    <div className="p-2.5 bg-indigo-50 rounded-xl border border-indigo-100 text-indigo-600">
+                        <FaBriefcase className="w-5 h-5" />
+                    </div>
+                    <div>
+                        <h2 className="text-lg font-bold text-slate-900">Manage Experience</h2>
+                        <p className="text-xs text-slate-500">Configure your professional timeline, internships, and freelancing entries</p>
+                    </div>
                 </div>
                 <button
                     onClick={openCreateModal}

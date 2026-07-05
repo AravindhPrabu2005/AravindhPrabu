@@ -96,7 +96,7 @@ export default function ResumeSettings() {
     return (
         <div className="w-full space-y-6">
             {/* Page Title */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 border-b border-slate-100 pb-5">
                 <div className="p-2.5 bg-indigo-50 rounded-xl border border-indigo-100 text-indigo-600 animate-pulse">
                     <FaCloudUploadAlt size={20} />
                 </div>
