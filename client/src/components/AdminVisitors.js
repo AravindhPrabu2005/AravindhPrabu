@@ -64,6 +64,17 @@ export default function AdminVisitors() {
         return "Browser Client";
     };
 
+    // Helper to extract clean browser info
+    const getBrowserDescription = (ua) => {
+        if (!ua) return "Unknown Browser";
+        if (ua.match(/edg/i)) return "Microsoft Edge";
+        if (ua.match(/opr/i) || ua.match(/opera/i)) return "Opera";
+        if (ua.match(/chrome|crios/i)) return "Google Chrome";
+        if (ua.match(/firefox|fxios/i)) return "Mozilla Firefox";
+        if (ua.match(/safari/i)) return "Apple Safari";
+        return "Generic Browser";
+    };
+
     return (
         <div className="w-full space-y-6">
             {loading ? (
@@ -159,16 +170,20 @@ export default function AdminVisitors() {
 
                                                 {/* Device / Client */}
                                                 <td className="px-6 py-4">
-                                                    <div className="space-y-1">
-                                                        <div className="flex items-center gap-1.5 text-gray-300 text-xs">
-                                                            <FaLaptop className="text-gray-400" size={12} />
+                                                    <div className="space-y-1.5">
+                                                        <div className="flex items-center gap-1.5 text-gray-200 text-xs font-semibold">
+                                                            <FaLaptop className="text-purple-400" size={12} />
                                                             <span>{getDeviceDescription(visitor.userAgent)}</span>
                                                         </div>
-                                                        <div className="text-[10px] text-gray-400 truncate max-w-[250px]" title={visitor.userAgent}>
-                                                            {visitor.userAgent || "Unknown UA"}
+                                                        <div className="text-xs text-gray-300">
+                                                            Browser: <span className="text-pink-300 font-medium">{getBrowserDescription(visitor.userAgent)}</span>
                                                         </div>
                                                         <div className="text-[10px] text-purple-400 font-mono">
-                                                            {visitor.screenResolution || "Unknown Screen"} | {visitor.language || "Unknown Lang"}
+                                                            Screen: {visitor.screenResolution || "Unknown"} | Lang: {visitor.language || "Unknown"}
+                                                        </div>
+                                                        {/* Raw User Agent - wrapped inside a small readable scrollbox */}
+                                                        <div className="text-[9px] text-gray-500 font-mono bg-slate-950/40 border border-white/5 p-2 rounded-lg max-w-[280px] break-all leading-normal max-h-[60px] overflow-y-auto scrollbar-hide" title={visitor.userAgent}>
+                                                            {visitor.userAgent || "Unknown UA"}
                                                         </div>
                                                     </div>
                                                 </td>
