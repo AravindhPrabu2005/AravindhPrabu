@@ -86,6 +86,7 @@ function LayoutWrapper() {
               screenResolution: `${window.screen.width}x${window.screen.height}`,
               language: navigator.language,
               path: window.location.pathname,
+              timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "Unknown",
               geoData // Send geolocation retrieved from client-side
             });
             sessionStorage.setItem("portfolio_visited", "true");

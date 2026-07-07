@@ -262,6 +262,12 @@ export default function AdminVisitors() {
                                             {selectedVisitor.isp || "Unknown ISP"}
                                         </span>
                                     </div>
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-xs text-slate-500 font-medium">Device Timezone</span>
+                                        <span className="text-xs font-mono font-semibold text-slate-800">
+                                            {selectedVisitor.timezone || "Unknown"}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
 
