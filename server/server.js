@@ -10,6 +10,10 @@ const serverless = require("serverless-http");
 const axios = require("axios");
 const cloudinary = require("cloudinary").v2;
 const multer = require("multer");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+
+const JWT_SECRET = process.env.JWT_SECRET || "aravindhprabu_portfolio_jwt_secret_token_key_2026_saibaba";
 
 const app = express();
 app.set("trust proxy", true);
@@ -29,11 +33,39 @@ console.log("NOTIFICATION_EMAIL:", NOTIFICATION_EMAIL);
 console.log("PORT:", PORT);
 console.log("===================================");
 
+const adminSchema = new mongoose.Schema({
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true }
+});
+
+const Admin = mongoose.model("Admin", adminSchema);
+
+async function initAdmin() {
+  try {
+    const adminCount = await Admin.countDocuments();
+    if (adminCount === 0) {
+      console.log("Seeding default admin user...");
+      const hashedPassword = bcrypt.hashSync("Saibaba@123@123", 10);
+      const defaultAdmin = new Admin({
+        email: "aravindhprabu2005@gmail.com",
+        password: hashedPassword
+      });
+      await defaultAdmin.save();
+      console.log("✓ Default admin user seeded successfully!");
+    } else {
+      console.log("✓ Admin user already exists in database");
+    }
+  } catch (err) {
+    console.error("✗ Error initializing/seeding admin:", err.message);
+  }
+}
+
 mongoose
   .connect(process.env.MONGODB_URI)
   .then(() => {
     console.log("✓ MongoDB Connected Successfully");
     initSettings();
+    initAdmin();
   })
   .catch((err) => {
     console.error("✗ MongoDB Connection Error:");
@@ -136,6 +168,60 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 app.get("/test", (req, res) => {
   res.send("I am here da!");
+});
+
+// JWT Verification Middleware
+const requireAuth = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    console.log("✗ Unauthorized access attempt: No Bearer Token");
+    return res.status(401).json({ error: "Unauthorized access: Please login first." });
+  }
+
+  const token = authHeader.split(" ")[1];
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    req.admin = decoded;
+    next();
+  } catch (error) {
+    console.log("✗ Unauthorized access attempt: Invalid token signature");
+    return res.status(401).json({ error: "Unauthorized access: Session expired or invalid token." });
+  }
+};
+
+// Admin Login endpoint
+app.post("/api/admin/login", async (req, res) => {
+  console.log("\n=== Admin Login Attempt ===");
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ error: "Email and password are required." });
+    }
+
+    const admin = await Admin.findOne({ email: email.toLowerCase().trim() });
+    if (!admin) {
+      console.log(`✗ Login failed: admin user not found with email ${email}`);
+      return res.status(401).json({ error: "Invalid email address or password." });
+    }
+
+    const isMatch = bcrypt.compareSync(password, admin.password);
+    if (!isMatch) {
+      console.log("✗ Login failed: incorrect password");
+      return res.status(401).json({ error: "Invalid email address or password." });
+    }
+
+    console.log("✓ Login successful, signing JWT...");
+    const token = jwt.sign({ id: admin._id, email: admin.email }, JWT_SECRET, { expiresIn: "24h" });
+    
+    res.json({
+      success: true,
+      token,
+      message: "Authentication successful!"
+    });
+  } catch (error) {
+    console.error("✗ Login endpoint error:", error.message);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
 });
 
 // Helper function to screen out illegitimate/test/spam emails
@@ -311,7 +397,7 @@ app.post("/api/contact", async (req, res) => {
   }
 });
 
-app.get("/api/messages", async (req, res) => {
+app.get("/api/messages", requireAuth, async (req, res) => {
   try {
     const messages = await Contact.find().sort({ createdAt: -1 });
     console.log(`✓ Fetched ${messages.length} messages from database (sorted by date)`);
@@ -385,7 +471,7 @@ app.post("/api/send-download-link", async (req, res) => {
   }
 });
 
-app.get("/api/resume-emails", async (req, res) => {
+app.get("/api/resume-emails", requireAuth, async (req, res) => {
   try {
     const emails = await ResumeEmail.find();
     console.log(`✓ Fetched ${emails.length} resume requests from database`);
@@ -396,7 +482,7 @@ app.get("/api/resume-emails", async (req, res) => {
   }
 });
 
-app.put("/api/resume-emails/:id", async (req, res) => {
+app.put("/api/resume-emails/:id", requireAuth, async (req, res) => {
   console.log("\n=== Resume Approval ===");
   console.log("Timestamp:", new Date().toISOString());
 
@@ -471,7 +557,7 @@ Aravindh Prabu`;
 });
 
 // DELETE individual contact message
-app.delete("/api/messages/:id", async (req, res) => {
+app.delete("/api/messages/:id", requireAuth, async (req, res) => {
   try {
     await Contact.findByIdAndDelete(req.params.id);
     res.json({ success: true, message: "Message deleted successfully" });
@@ -481,7 +567,7 @@ app.delete("/api/messages/:id", async (req, res) => {
 });
 
 // DELETE all contact messages
-app.delete("/api/messages", async (req, res) => {
+app.delete("/api/messages", requireAuth, async (req, res) => {
   try {
     await Contact.deleteMany({});
     res.json({ success: true, message: "All messages deleted successfully" });
@@ -491,7 +577,7 @@ app.delete("/api/messages", async (req, res) => {
 });
 
 // DELETE individual resume request
-app.delete("/api/resume-emails/:id", async (req, res) => {
+app.delete("/api/resume-emails/:id", requireAuth, async (req, res) => {
   try {
     await ResumeEmail.findByIdAndDelete(req.params.id);
     res.json({ success: true, message: "Resume request deleted successfully" });
@@ -501,7 +587,7 @@ app.delete("/api/resume-emails/:id", async (req, res) => {
 });
 
 // DELETE resume requests (all or history status)
-app.delete("/api/resume-emails", async (req, res) => {
+app.delete("/api/resume-emails", requireAuth, async (req, res) => {
   try {
     const { status } = req.query;
     const filter = status === "history" ? { status: { $ne: "pending" } } : {};
@@ -544,7 +630,7 @@ app.get("/api/settings", async (req, res) => {
 });
 
 // PUT Cover Letter
-app.put("/api/settings/cover-letter", async (req, res) => {
+app.put("/api/settings/cover-letter", requireAuth, async (req, res) => {
   try {
     const { coverLetterText } = req.body;
     const settings = await AdminSettings.findOneAndUpdate(
@@ -559,7 +645,7 @@ app.put("/api/settings/cover-letter", async (req, res) => {
 });
 
 // POST Resume PDF upload locally
-app.post("/api/settings/resume", upload.single("resume"), async (req, res) => {
+app.post("/api/settings/resume", requireAuth, upload.single("resume"), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: "No PDF file provided" });
@@ -656,7 +742,7 @@ app.get("/api/projects", async (req, res) => {
 });
 
 // POST create project (with image upload)
-app.post("/api/projects", imageUpload.single("image"), async (req, res) => {
+app.post("/api/projects", requireAuth, imageUpload.single("image"), async (req, res) => {
   try {
     const { title, description, github, stack, featured } = req.body;
     if (!req.file) {
@@ -679,7 +765,7 @@ app.post("/api/projects", imageUpload.single("image"), async (req, res) => {
 });
 
 // PUT update project (optional image upload)
-app.put("/api/projects/:id", imageUpload.single("image"), async (req, res) => {
+app.put("/api/projects/:id", requireAuth, imageUpload.single("image"), async (req, res) => {
   try {
     const { id } = req.params;
     const { title, description, github, stack, featured } = req.body;
@@ -704,7 +790,7 @@ app.put("/api/projects/:id", imageUpload.single("image"), async (req, res) => {
 });
 
 // DELETE project
-app.delete("/api/projects/:id", async (req, res) => {
+app.delete("/api/projects/:id", requireAuth, async (req, res) => {
   try {
     await Project.findByIdAndDelete(req.params.id);
     res.json({ success: true, message: "Project deleted successfully" });
@@ -728,7 +814,7 @@ app.get("/api/certifications", async (req, res) => {
 });
 
 // POST create certification (with image upload)
-app.post("/api/certifications", imageUpload.single("image"), async (req, res) => {
+app.post("/api/certifications", requireAuth, imageUpload.single("image"), async (req, res) => {
   try {
     const { title, provider, description } = req.body;
     if (!req.file) {
@@ -749,7 +835,7 @@ app.post("/api/certifications", imageUpload.single("image"), async (req, res) =>
 });
 
 // PUT update certification (optional image upload)
-app.put("/api/certifications/:id", imageUpload.single("image"), async (req, res) => {
+app.put("/api/certifications/:id", requireAuth, imageUpload.single("image"), async (req, res) => {
   try {
     const { id } = req.params;
     const { title, provider, description } = req.body;
@@ -768,7 +854,7 @@ app.put("/api/certifications/:id", imageUpload.single("image"), async (req, res)
 });
 
 // DELETE certification
-app.delete("/api/certifications/:id", async (req, res) => {
+app.delete("/api/certifications/:id", requireAuth, async (req, res) => {
   try {
     await Certification.findByIdAndDelete(req.params.id);
     res.json({ success: true, message: "Certification deleted successfully" });
@@ -792,7 +878,7 @@ app.get("/api/achievements", async (req, res) => {
 });
 
 // POST create achievement (with image upload)
-app.post("/api/achievements", imageUpload.single("image"), async (req, res) => {
+app.post("/api/achievements", requireAuth, imageUpload.single("image"), async (req, res) => {
   try {
     const { title, position, description, type } = req.body;
     if (!req.file) {
@@ -814,7 +900,7 @@ app.post("/api/achievements", imageUpload.single("image"), async (req, res) => {
 });
 
 // PUT update achievement (optional image upload)
-app.put("/api/achievements/:id", imageUpload.single("image"), async (req, res) => {
+app.put("/api/achievements/:id", requireAuth, imageUpload.single("image"), async (req, res) => {
   try {
     const { id } = req.params;
     const { title, position, description, type } = req.body;
@@ -838,7 +924,7 @@ app.put("/api/achievements/:id", imageUpload.single("image"), async (req, res) =
 });
 
 // DELETE achievement
-app.delete("/api/achievements/:id", async (req, res) => {
+app.delete("/api/achievements/:id", requireAuth, async (req, res) => {
   try {
     await Achievement.findByIdAndDelete(req.params.id);
     res.json({ success: true, message: "Achievement deleted successfully" });
@@ -863,7 +949,7 @@ app.get("/api/experiences", async (req, res) => {
 });
 
 // POST create experience (with logo image upload)
-app.post("/api/experiences", imageUpload.single("image"), async (req, res) => {
+app.post("/api/experiences", requireAuth, imageUpload.single("image"), async (req, res) => {
   try {
     const { role, duration, location, points } = req.body;
     if (!req.file) {
@@ -885,7 +971,7 @@ app.post("/api/experiences", imageUpload.single("image"), async (req, res) => {
 });
 
 // PUT update experience (optional logo upload)
-app.put("/api/experiences/:id", imageUpload.single("image"), async (req, res) => {
+app.put("/api/experiences/:id", requireAuth, imageUpload.single("image"), async (req, res) => {
   try {
     const { id } = req.params;
     const { role, duration, location, points } = req.body;
@@ -909,7 +995,7 @@ app.put("/api/experiences/:id", imageUpload.single("image"), async (req, res) =>
 });
 
 // DELETE experience
-app.delete("/api/experiences/:id", async (req, res) => {
+app.delete("/api/experiences/:id", requireAuth, async (req, res) => {
   try {
     await Experience.findByIdAndDelete(req.params.id);
     res.json({ success: true, message: "Experience deleted successfully" });
@@ -1031,7 +1117,7 @@ app.post("/api/visit", async (req, res) => {
 });
 
 // GET all visitors (limited to latest 100)
-app.get("/api/visitors", async (req, res) => {
+app.get("/api/visitors", requireAuth, async (req, res) => {
   try {
     const visitors = await Visitor.find().sort({ visitedAt: -1 }).limit(100);
     res.json(visitors);
@@ -1042,7 +1128,7 @@ app.get("/api/visitors", async (req, res) => {
 });
 
 // DELETE clear all visitors
-app.delete("/api/visitors", async (req, res) => {
+app.delete("/api/visitors", requireAuth, async (req, res) => {
   try {
     await Visitor.deleteMany({});
     res.json({ success: true, message: "All visitor logs cleared successfully" });
@@ -1053,7 +1139,7 @@ app.delete("/api/visitors", async (req, res) => {
 });
 
 // DELETE single visitor log
-app.delete("/api/visitors/:id", async (req, res) => {
+app.delete("/api/visitors/:id", requireAuth, async (req, res) => {
   try {
     await Visitor.findByIdAndDelete(req.params.id);
     res.json({ success: true, message: "Visitor log deleted successfully" });
