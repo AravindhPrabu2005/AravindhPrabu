@@ -1048,7 +1048,14 @@ app.post("/api/visit", async (req, res) => {
           city = geoRes.data.city || "Unknown";
           region = geoRes.data.regionName || "Unknown";
           isp = geoRes.data.isp || "Unknown";
-          org = geoRes.data.org || geoRes.data.isp || "Unknown";
+          
+          let rawOrg = geoRes.data.org || "";
+          if ((!rawOrg || rawOrg.toLowerCase() === "unknown") && geoRes.data.as) {
+            const match = geoRes.data.as.match(/^AS\d+\s+(.*)$/i);
+            rawOrg = match ? match[1].trim() : geoRes.data.as.trim();
+          }
+          org = rawOrg || geoRes.data.isp || "Unknown";
+          
           latitude = geoRes.data.lat || null;
           longitude = geoRes.data.lon || null;
         }
