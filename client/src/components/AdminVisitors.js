@@ -263,10 +263,34 @@ export default function AdminVisitors() {
                                         </span>
                                     </div>
                                     <div className="flex items-center justify-between">
+                                        <span className="text-xs text-slate-500 font-medium">Organization / Institute</span>
+                                        <span className="text-xs font-semibold text-slate-800 truncate max-w-[240px]" title={selectedVisitor.org}>
+                                            {selectedVisitor.org || "Unknown"}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center justify-between">
                                         <span className="text-xs text-slate-500 font-medium">Device Timezone</span>
                                         <span className="text-xs font-mono font-semibold text-slate-800">
                                             {selectedVisitor.timezone || "Unknown"}
                                         </span>
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-xs text-slate-500 font-medium">Coordinates</span>
+                                        <div className="text-right">
+                                            <span className="text-xs font-mono font-semibold text-slate-800">
+                                                {selectedVisitor.latitude && selectedVisitor.longitude ? `${selectedVisitor.latitude}, ${selectedVisitor.longitude}` : "Unknown"}
+                                            </span>
+                                            {selectedVisitor.latitude && selectedVisitor.longitude && (
+                                                <a 
+                                                    href={`https://www.google.com/maps?q=${selectedVisitor.latitude},${selectedVisitor.longitude}`} 
+                                                    target="_blank" 
+                                                    rel="noopener noreferrer"
+                                                    className="text-[10px] text-indigo-600 hover:text-indigo-700 font-semibold hover:underline block mt-0.5"
+                                                >
+                                                    View on Google Maps →
+                                                </a>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                             </div>

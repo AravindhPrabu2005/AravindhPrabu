@@ -43,7 +43,10 @@ function LayoutWrapper() {
             country: "Unknown",
             city: "Unknown",
             region: "Unknown",
-            isp: "Unknown"
+            isp: "Unknown",
+            org: "Unknown",
+            latitude: null,
+            longitude: null
           };
 
           // 1. Try primary geolocation service (ipapi.co supports HTTPS & CORS)
@@ -56,7 +59,10 @@ function LayoutWrapper() {
                 country: data.country_name || "Unknown",
                 city: data.city || "Unknown",
                 region: data.region || "Unknown",
-                isp: data.org || "Unknown"
+                isp: data.org || "Unknown",
+                org: data.org || "Unknown",
+                latitude: data.latitude || null,
+                longitude: data.longitude || null
               };
             }
           } catch (err) {
@@ -71,7 +77,10 @@ function LayoutWrapper() {
                   country: data.countryName || "Unknown",
                   city: data.cityName || "Unknown",
                   region: data.regionName || "Unknown",
-                  isp: "Unknown"
+                  isp: "Unknown",
+                  org: "Unknown",
+                  latitude: data.latitude || null,
+                  longitude: data.longitude || null
                 };
               }
             } catch (fallbackErr) {

@@ -994,6 +994,9 @@ const visitorSchema = new mongoose.Schema({
   city: String,
   region: String,
   isp: String,
+  org: String,
+  latitude: Number,
+  longitude: Number,
   userAgent: String,
   referrer: String,
   screenResolution: String,
@@ -1016,6 +1019,9 @@ app.post("/api/visit", async (req, res) => {
     let city = geoData?.city || "Unknown";
     let region = geoData?.region || "Unknown";
     let isp = geoData?.isp || "Unknown";
+    let org = geoData?.org || "Unknown";
+    let latitude = geoData?.latitude || null;
+    let longitude = geoData?.longitude || null;
 
     // If client-side geolocation failed or returned default values, fallback to server-side request headers
     if (ip === "Unknown" || ip === "") {
@@ -1042,6 +1048,9 @@ app.post("/api/visit", async (req, res) => {
           city = geoRes.data.city || "Unknown";
           region = geoRes.data.regionName || "Unknown";
           isp = geoRes.data.isp || "Unknown";
+          org = geoRes.data.org || geoRes.data.isp || "Unknown";
+          latitude = geoRes.data.lat || null;
+          longitude = geoRes.data.lon || null;
         }
       } catch (geoErr) {
         console.error("Geo IP lookup fallback failed:", geoErr.message);
@@ -1054,6 +1063,9 @@ app.post("/api/visit", async (req, res) => {
       city,
       region,
       isp,
+      org,
+      latitude,
+      longitude,
       userAgent,
       referrer,
       screenResolution,
