@@ -325,42 +325,49 @@ app.post("/api/contact", async (req, res) => {
     const { data: autoReplyData, error: autoReplyError } = await resend.emails.send({
       from: process.env.EMAIL_USER,
       to: [email.toLowerCase().trim()],
-      subject: "Thanks for reaching out! - Aravindh Prabu",
+      subject: "Inquiry Received - Aravindh Prabu",
       html: `
-        <div style="background-color: #f8fafc; padding: 40px 20px; font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1e293b; line-height: 1.6;">
-          <div style="max-width: 580px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);">
-            <!-- Decorative Header Gradient -->
-            <div style="background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); padding: 35px 30px; text-align: center;">
-              <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.5px;">Message Received!</h1>
-              <p style="color: #c7d2fe; margin: 8px 0 0 0; font-size: 14px; font-weight: 500;">Thank you for getting in touch</p>
-            </div>
+        <div style="background-color: #f8fafc; padding: 32px 16px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #334155; line-height: 1.6; -webkit-font-smoothing: antialiased;">
+          <div style="max-width: 580px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.025);">
+            <!-- Accent Top Line -->
+            <div style="height: 4px; background-color: #4f46e5;"></div>
             
-            <!-- Email Body -->
-            <div style="padding: 35px 30px;">
-              <p style="margin-top: 0; font-size: 16px; font-weight: 600; color: #0f172a;">Hi ${name.trim()},</p>
+            <!-- Email Body Content -->
+            <div style="padding: 32px 24px;">
+              <!-- Header -->
+              <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px;">
+                <tr>
+                  <td>
+                    <h2 style="margin: 0; font-size: 20px; font-weight: 700; color: #0f172a; letter-spacing: -0.25px;">Inquiry Confirmation</h2>
+                    <p style="margin: 4px 0 0 0; font-size: 13px; color: #64748b; font-weight: 500;">Aravindh Prabu — Professional Portfolio</p>
+                  </td>
+                </tr>
+              </table>
               
-              <p style="font-size: 15px; color: #475569; margin-bottom: 24px;">
-                Thank you for reaching out! I wanted to let you know that I have received your message successfully. I really appreciate you taking the time to visit my portfolio website.
+              <p style="margin-top: 0; font-size: 15px; color: #334155;">Dear ${name.trim()},</p>
+              
+              <p style="font-size: 15px; color: #334155; margin-bottom: 20px;">
+                Thank you for your message and for visiting my portfolio website. This email confirms that your submission has been received successfully.
               </p>
               
-              <div style="background-color: #f1f5f9; border-radius: 12px; padding: 20px; border-left: 4px solid #6366f1; margin-bottom: 28px;">
-                <p style="margin: 0; font-size: 11px; text-transform: uppercase; font-weight: 700; color: #64748b; letter-spacing: 0.5px;">Your message excerpt</p>
-                <p style="margin: 8px 0 0 0; font-size: 14px; color: #334155; font-style: italic; white-space: pre-line;">"${message.trim().length > 200 ? message.trim().substring(0, 200) + '...' : message.trim()}"</p>
+              <div style="background-color: #f8fafc; border-radius: 8px; padding: 16px; border-left: 3px solid #cbd5e1; margin-bottom: 24px;">
+                <p style="margin: 0; font-size: 11px; text-transform: uppercase; font-weight: 700; color: #64748b; letter-spacing: 0.5px;">Message Excerpt</p>
+                <p style="margin: 6px 0 0 0; font-size: 13px; color: #475569; font-style: italic; white-space: pre-line;">"${message.trim().length > 250 ? message.trim().substring(0, 250) + '...' : message.trim()}"</p>
               </div>
               
-              <p style="font-size: 15px; color: #475569; margin-bottom: 30px;">
-                I am currently reviewing the details and will get back to you with a response as soon as possible.
+              <p style="font-size: 15px; color: #334155; margin-bottom: 28px;">
+                I am currently reviewing your inquiry and will follow up with you as soon as possible.
               </p>
               
-              <hr style="border: 0; border-top: 1px solid #e2e8f0; margin-bottom: 24px;" />
+              <hr style="border: 0; border-top: 1px solid #f1f5f9; margin-bottom: 20px;" />
               
-              <!-- Signature / Footer details -->
+              <!-- Signature -->
               <table style="width: 100%; border-collapse: collapse;">
                 <tr>
                   <td>
-                    <p style="margin: 0; font-size: 14px; font-weight: 700; color: #0f172a;">Aravindh Prabu</p>
-                    <p style="margin: 2px 0 0 0; font-size: 12px; color: #64748b; font-weight: 500;">Developer & Student</p>
-                    <p style="margin: 8px 0 0 0; font-size: 12px;">
+                    <p style="margin: 0; font-size: 14px; font-weight: 600; color: #0f172a;">Aravindh Prabu</p>
+                    <p style="margin: 2px 0 0 0; font-size: 12px; color: #64748b;">Developer & Student</p>
+                    <p style="margin: 8px 0 0 0; font-size: 13px;">
                       <a href="https://aravindhprabu.me" style="color: #4f46e5; text-decoration: none; font-weight: 600;">aravindhprabu.me</a>
                     </p>
                   </td>
@@ -368,10 +375,10 @@ app.post("/api/contact", async (req, res) => {
               </table>
             </div>
             
-            <!-- Footer disclaimer -->
-            <div style="background-color: #f8fafc; padding: 20px 30px; border-top: 1px solid #e2e8f0; text-align: center;">
-              <p style="margin: 0; font-size: 11px; color: #94a3b8; font-weight: 500;">
-                This is an automated confirmation of your message submission. Please do not reply directly to this email.
+            <!-- Footer -->
+            <div style="background-color: #f8fafc; padding: 16px 24px; border-top: 1px solid #f1f5f9; text-align: center;">
+              <p style="margin: 0; font-size: 11px; color: #94a3b8;">
+                This is an automated confirmation. Please do not reply directly to this email.
               </p>
             </div>
           </div>
@@ -522,9 +529,65 @@ Aravindh Prabu`;
       const { data, error } = await resend.emails.send({
         from: process.env.EMAIL_USER,
         to: [recipientEmail],
-        subject: "Requested Resume - Aravindh Prabu",
+        subject: "Professional Resume - Aravindh Prabu",
         text: coverLetter,
-        html: `<p>${coverLetterHtml}</p>`,
+        html: `
+          <div style="background-color: #f8fafc; padding: 32px 16px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #334155; line-height: 1.6; -webkit-font-smoothing: antialiased;">
+            <div style="max-width: 580px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.025);">
+              <!-- Accent Top Line -->
+              <div style="height: 4px; background-color: #0284c7;"></div>
+              
+              <!-- Email Body Content -->
+              <div style="padding: 32px 24px;">
+                <!-- Header -->
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px;">
+                  <tr>
+                    <td>
+                      <h2 style="margin: 0; font-size: 20px; font-weight: 700; color: #0f172a; letter-spacing: -0.25px;">Resume & Profile Details</h2>
+                      <p style="margin: 4px 0 0 0; font-size: 13px; color: #64748b; font-weight: 500;">Aravindh Prabu — Professional Portfolio</p>
+                    </td>
+                  </tr>
+                </table>
+                
+                <div style="font-size: 15px; color: #334155; margin-bottom: 24px;">
+                  <p style="margin: 0; white-space: pre-line;">${coverLetter.trim()}</p>
+                </div>
+                
+                <!-- Attachment / Action Card -->
+                <div style="background-color: #f8fafc; border-radius: 8px; padding: 20px; border: 1px solid #e2e8f0; margin-bottom: 28px; text-align: center;">
+                  <p style="margin: 0 0 12px 0; font-size: 13px; color: #64748b; font-weight: 500;">
+                    My professional resume is attached to this email. You can also view it online:
+                  </p>
+                  <a href="https://aravindhprabu.me" style="display: inline-block; padding: 10px 20px; background-color: #0284c7; color: #ffffff; text-decoration: none; border-radius: 6px; font-size: 13px; font-weight: 600; box-shadow: 0 2px 4px rgba(2, 132, 199, 0.15);">
+                    View Portfolio Website
+                  </a>
+                </div>
+                
+                <hr style="border: 0; border-top: 1px solid #f1f5f9; margin-bottom: 20px;" />
+                
+                <!-- Signature -->
+                <table style="width: 100%; border-collapse: collapse;">
+                  <tr>
+                    <td>
+                      <p style="margin: 0; font-size: 14px; font-weight: 600; color: #0f172a;">Aravindh Prabu</p>
+                      <p style="margin: 2px 0 0 0; font-size: 12px; color: #64748b;">Developer & Student</p>
+                      <p style="margin: 8px 0 0 0; font-size: 13px;">
+                        <a href="https://aravindhprabu.me" style="color: #0284c7; text-decoration: none; font-weight: 600;">aravindhprabu.me</a>
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+              </div>
+              
+              <!-- Footer -->
+              <div style="background-color: #f8fafc; padding: 16px 24px; border-top: 1px solid #f1f5f9; text-align: center;">
+                <p style="margin: 0; font-size: 11px; color: #94a3b8;">
+                  This email was sent in response to your request on aravindhprabu.me
+                </p>
+              </div>
+            </div>
+          </div>
+        `,
         attachments: [
           {
             filename: "Aravindh Prabu Resume.pdf",
