@@ -109,7 +109,12 @@ export default function Admin() {
                                                         <div className="w-9 h-9 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center flex-shrink-0 text-white font-bold text-sm shadow-sm">
                                                             {msg.name?.charAt(0).toUpperCase()}
                                                         </div>
-                                                        <span className="text-slate-800 font-semibold text-sm">{msg.name}</span>
+                                                        <div>
+                                                            <span className="text-slate-800 font-semibold text-sm block">{msg.name}</span>
+                                                            <span className="text-[10px] text-slate-400 block mt-0.5">
+                                                                {msg.createdAt ? new Date(msg.createdAt).toLocaleString() : "Date N/A"}
+                                                            </span>
+                                                        </div>
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">

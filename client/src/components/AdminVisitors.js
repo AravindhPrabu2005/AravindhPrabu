@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import axiosInstance from "./axiosInstance";
-import { FaTrash, FaTrashAlt, FaGlobe, FaLaptop, FaCalendarAlt, FaNetworkWired } from "react-icons/fa";
+import { FaTrash, FaTrashAlt, FaGlobe, FaLaptop, FaCalendarAlt, FaNetworkWired, FaEye, FaTimes, FaCopy } from "react-icons/fa";
 
 export default function AdminVisitors() {
     const [visitors, setVisitors] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [selectedVisitor, setSelectedVisitor] = useState(null);
 
     const fetchVisitors = () => {
         axiosInstance.get("/api/visitors")
@@ -27,6 +28,9 @@ export default function AdminVisitors() {
             try {
                 await axiosInstance.delete(`/api/visitors/${id}`);
                 fetchVisitors();
+                if (selectedVisitor && selectedVisitor._id === id) {
+                    setSelectedVisitor(null);
+                }
             } catch (error) {
                 console.error("Error deleting visitor log:", error);
             }
@@ -38,6 +42,7 @@ export default function AdminVisitors() {
             try {
                 await axiosInstance.delete("/api/visitors");
                 fetchVisitors();
+                setSelectedVisitor(null);
             } catch (error) {
                 console.error("Error clearing visitor logs:", error);
             }
@@ -103,7 +108,7 @@ export default function AdminVisitors() {
                         {visitors.length > 0 && (
                             <button
                                 onClick={handleClearAll}
-                                className="flex items-center justify-center gap-2 px-4 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 border border-red-100 rounded-xl text-xs font-semibold transition-all duration-300 active:scale-95 cursor-pointer"
+                                className="flex items-center justify-center gap-2 px-4 py-2.5 bg-red-50 hover:bg-red-100 text-red-650 hover:text-red-700 border border-red-100 rounded-xl text-xs font-semibold transition-all duration-300 active:scale-95 cursor-pointer"
                             >
                                 <FaTrashAlt />
                                 <span>Clear All Logs</span>
@@ -121,12 +126,11 @@ export default function AdminVisitors() {
                             <div className="overflow-x-auto">
                                 <table className="w-full border-collapse">
                                     <thead>
-                                        <tr className="bg-slate-55 border-b border-slate-200/80 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                        <tr className="bg-slate-50 border-b border-slate-200/80 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
                                             <th className="px-6 py-4">Date & Time</th>
                                             <th className="px-6 py-4">Location & ISP</th>
-                                            <th className="px-6 py-4">IP Address</th>
-                                            <th className="px-6 py-4">Device / Client</th>
                                             <th className="px-6 py-4">Referrer / Entry</th>
+                                            <th className="px-6 py-4 text-center">Session Details</th>
                                             <th className="px-6 py-4 text-center">Action</th>
                                         </tr>
                                     </thead>
@@ -161,42 +165,8 @@ export default function AdminVisitors() {
                                                     </div>
                                                 </td>
 
-                                                {/* IP Address */}
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    <code className="text-xs text-slate-850 font-mono bg-slate-50 border border-slate-200 px-2 py-1 rounded">
-                                                        {visitor.ip || "Unknown"}
-                                                    </code>
-                                                </td>
-
-                                                {/* Device / Client */}
-                                                <td className="px-6 py-4">
-                                                    <div className="space-y-1.5">
-                                                        <div className="flex items-center gap-1.5 text-slate-800 text-xs font-bold">
-                                                            <FaLaptop className="text-slate-400" size={12} />
-                                                            <span>{getDeviceDescription(visitor.userAgent)}</span>
-                                                        </div>
-                                                        <div className="text-xs text-slate-600">
-                                                            Browser: <span className="text-indigo-600 font-semibold">{getBrowserDescription(visitor.userAgent)}</span>
-                                                        </div>
-                                                        <div className="text-[10px] text-slate-500 font-semibold font-mono">
-                                                            Screen: {visitor.screenResolution || "Unknown"} | Lang: {visitor.language || "Unknown"}
-                                                        </div>
-                                                         {/* Raw User Agent - fully wraps and allows click-to-copy */}
-                                                         <div 
-                                                             className="text-[10px] text-slate-500 font-mono bg-slate-50 border border-slate-200 p-2.5 rounded-lg max-w-[280px] break-all whitespace-normal leading-normal select-all cursor-pointer hover:bg-slate-100/60 transition-colors shadow-inner" 
-                                                             onClick={() => {
-                                                                 navigator.clipboard.writeText(visitor.userAgent);
-                                                                 alert("User Agent copied to clipboard!");
-                                                             }}
-                                                             title="Click to copy User Agent"
-                                                         >
-                                                             {visitor.userAgent || "Unknown UA"}
-                                                         </div>
-                                                     </div>
-                                                </td>
-
                                                 {/* Referrer / Entry */}
-                                                <td className="px-6 py-4 text-xs text-slate-650">
+                                                <td className="px-6 py-4 text-xs text-slate-600">
                                                     <div className="space-y-1">
                                                         <span className="px-2.5 py-1 bg-slate-50 rounded-lg border border-slate-200 text-[11px] font-bold text-slate-700 truncate max-w-[150px] inline-block shadow-xs">
                                                             {visitor.referrer === "Direct" ? "Direct Access" : visitor.referrer}
@@ -205,6 +175,17 @@ export default function AdminVisitors() {
                                                             Path: <span className="font-mono text-indigo-650">{visitor.path || "/"}</span>
                                                         </div>
                                                     </div>
+                                                </td>
+
+                                                {/* Details Button */}
+                                                <td className="px-6 py-4 whitespace-nowrap text-center">
+                                                    <button
+                                                        onClick={() => setSelectedVisitor(visitor)}
+                                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-55 hover:bg-indigo-100 text-indigo-600 hover:text-indigo-700 border border-indigo-100 rounded-xl text-xs font-semibold transition-all duration-300 active:scale-95 cursor-pointer shadow-xs"
+                                                    >
+                                                        <FaEye size={12} />
+                                                        <span>View Details</span>
+                                                    </button>
                                                 </td>
 
                                                 {/* Action */}
@@ -225,6 +206,153 @@ export default function AdminVisitors() {
                         </div>
                     )}
                 </>
+            )}
+
+            {/* Details Modal */}
+            {selectedVisitor && (
+                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-fadeIn">
+                    <div className="bg-white w-full max-w-lg rounded-2xl border border-slate-200 shadow-2xl flex flex-col overflow-hidden animate-slideUp">
+                        {/* Header */}
+                        <div className="bg-slate-50/80 px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                            <div className="flex items-center gap-2 text-indigo-600 font-semibold">
+                                <FaLaptop size={16} />
+                                <span>Visitor Session Details</span>
+                            </div>
+                            <button
+                                onClick={() => setSelectedVisitor(null)}
+                                className="text-slate-400 hover:text-slate-600 p-1.5 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+                            >
+                                <FaTimes size={16} />
+                            </button>
+                        </div>
+
+                        {/* Body */}
+                        <div className="p-6 overflow-y-auto space-y-5 max-h-[75vh]">
+                            {/* Section: IP & Location */}
+                            <div className="space-y-3">
+                                <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Network & Location</h4>
+                                <div className="bg-slate-50 rounded-xl p-4 border border-slate-200/60 space-y-3">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-xs text-slate-500 font-medium">IP Address</span>
+                                        <div className="flex items-center gap-2">
+                                            <code className="text-xs font-mono font-bold bg-white border border-slate-200 px-2.5 py-1 rounded shadow-xs text-slate-800">
+                                                {selectedVisitor.ip || "Unknown"}
+                                            </code>
+                                            <button
+                                                onClick={() => {
+                                                    navigator.clipboard.writeText(selectedVisitor.ip || "");
+                                                    alert("IP address copied to clipboard!");
+                                                }}
+                                                className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-white rounded border border-transparent hover:border-slate-200 transition-all cursor-pointer"
+                                                title="Copy IP Address"
+                                            >
+                                                <FaCopy size={12} />
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-xs text-slate-500 font-medium">Location</span>
+                                        <span className="text-xs font-semibold text-slate-800">
+                                            {selectedVisitor.city || "Unknown City"}, {selectedVisitor.region || "Unknown Region"}, {selectedVisitor.country || "Unknown Country"}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-xs text-slate-500 font-medium">ISP / Network</span>
+                                        <span className="text-xs font-semibold text-slate-800 truncate max-w-[240px]" title={selectedVisitor.isp}>
+                                            {selectedVisitor.isp || "Unknown ISP"}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Section: Client & Device Details */}
+                            <div className="space-y-3">
+                                <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Device & Browser</h4>
+                                <div className="bg-slate-50 rounded-xl p-4 border border-slate-200/60 space-y-3">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-xs text-slate-500 font-medium">Device Class</span>
+                                        <span className="text-xs font-semibold text-slate-800">
+                                            {getDeviceDescription(selectedVisitor.userAgent)}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-xs text-slate-500 font-medium">Browser Client</span>
+                                        <span className="text-xs font-semibold text-indigo-650">
+                                            {getBrowserDescription(selectedVisitor.userAgent)}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-xs text-slate-500 font-medium">Screen Resolution</span>
+                                        <span className="text-xs font-mono font-semibold text-slate-800">
+                                            {selectedVisitor.screenResolution || "Unknown"}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-xs text-slate-500 font-medium">Language</span>
+                                        <span className="text-xs font-semibold text-slate-800">
+                                            {selectedVisitor.language || "Unknown"}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Section: Referrer & Navigation */}
+                            <div className="space-y-3">
+                                <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Navigation Info</h4>
+                                <div className="bg-slate-50 rounded-xl p-4 border border-slate-200/60 space-y-3">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-xs text-slate-500 font-medium">Referrer Origin</span>
+                                        <span className="text-xs font-semibold text-slate-800 truncate max-w-[240px]" title={selectedVisitor.referrer}>
+                                            {selectedVisitor.referrer === "Direct" ? "Direct Access" : selectedVisitor.referrer}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-xs text-slate-500 font-medium">Page Visited</span>
+                                        <code className="text-xs font-mono text-indigo-650 font-bold">
+                                            {selectedVisitor.path || "/"}
+                                        </code>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Section: User Agent */}
+                            <div className="space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Raw User Agent</h4>
+                                    <button
+                                        onClick={() => {
+                                            navigator.clipboard.writeText(selectedVisitor.userAgent || "");
+                                            alert("User Agent copied to clipboard!");
+                                        }}
+                                        className="text-[10px] text-indigo-600 hover:text-indigo-700 font-semibold cursor-pointer"
+                                    >
+                                        Copy User Agent
+                                    </button>
+                                </div>
+                                <div 
+                                    className="text-[10px] text-slate-500 font-mono bg-slate-50 border border-slate-200 p-3 rounded-xl max-h-[100px] overflow-y-auto break-all leading-normal cursor-pointer hover:bg-slate-100/60 transition-colors shadow-inner"
+                                    title="Click to copy raw User Agent string"
+                                    onClick={() => {
+                                        navigator.clipboard.writeText(selectedVisitor.userAgent || "");
+                                        alert("User Agent copied!");
+                                    }}
+                                >
+                                    {selectedVisitor.userAgent || "Unknown"}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Footer */}
+                        <div className="bg-slate-50/80 px-6 py-4 border-t border-slate-100 flex justify-end">
+                            <button
+                                onClick={() => setSelectedVisitor(null)}
+                                className="px-4 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs transition-colors cursor-pointer"
+                            >
+                                Close Details
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );

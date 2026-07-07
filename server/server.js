@@ -43,9 +43,10 @@ mongoose
   });
 
 const contactSchema = new mongoose.Schema({
-  name: String,
-  email: String,
-  message: String,
+  name: { type: String, required: true },
+  email: { type: String, required: true },
+  message: { type: String, required: true },
+  createdAt: { type: Date, default: Date.now }
 });
 
 const Contact = mongoose.model("Contact", contactSchema);
@@ -137,6 +138,53 @@ app.get("/test", (req, res) => {
   res.send("I am here da!");
 });
 
+// Helper function to screen out illegitimate/test/spam emails
+function isLegitimateEmail(email) {
+  if (!email) return false;
+  const lowerEmail = email.toLowerCase().trim();
+  
+  // Basic Regex Check
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(lowerEmail)) return false;
+
+  // Block generic dummy handles
+  const blockedLocalParts = [
+    "test", "fake", "temp", "spam", "dummy", "admin", "noreply", 
+    "no-reply", "null", "undefined", "abcd", "abc", "testing", "user"
+  ];
+  
+  // Block common dummy domains
+  const blockedDomains = [
+    "example.com", "example.org", "example.net", "test.com", "test.org", "test.net",
+    "tempmail.com", "tempmail.org", "mailinator.com", "yopmail.com", 
+    "10minutemail.com", "dispostable.com", "getairmail.com", "throwawaymail.com",
+    "guerrillamail.com", "maildrop.cc", "sharklasers.com", "trashmail.com",
+    "email.com", "gmailinator.com"
+  ];
+
+  const parts = lowerEmail.split("@");
+  if (parts.length !== 2) return false;
+  const localPart = parts[0];
+  const domain = parts[1];
+
+  // If local part is a blocked keyword or matches test/fake/spam patterns
+  if (blockedLocalParts.includes(localPart)) return false;
+  if (localPart.includes("test") || localPart.includes("fake") || localPart.includes("spam")) {
+    // Make sure it's not a real name containing 'test' (rare, but keep it robust)
+    if (localPart === "test" || localPart.startsWith("test") && isNaN(localPart.replace("test", ""))) {
+      return false;
+    }
+  }
+
+  // If domain is directly blocked or contains spam keywords
+  if (blockedDomains.includes(domain)) return false;
+  if (domain.includes("example") || domain.includes("test") || domain.includes("fake") || domain.includes("tempmail")) {
+    return false;
+  }
+
+  return true;
+}
+
 app.post("/api/contact", async (req, res) => {
   console.log("\n=== Contact Form Submission ===");
   console.log("Timestamp:", new Date().toISOString());
@@ -145,39 +193,116 @@ app.post("/api/contact", async (req, res) => {
   try {
     const { name, email, message } = req.body;
 
+    // 1. Enforce all fields are provided and non-empty
+    if (!name || !email || !message || name.trim() === "" || email.trim() === "" || message.trim() === "") {
+      console.log("✗ Validation failed: Missing required fields");
+      return res.status(400).json({ success: false, message: "All fields (Name, Email, and Message) are required." });
+    }
+
+    // 2. Validate email legitimacy
+    if (!isLegitimateEmail(email)) {
+      console.log(`✗ Validation failed: Illegitimate or invalid email detected: ${email}`);
+      return res.status(400).json({ 
+        success: false, 
+        message: "Please enter a valid, legitimate email address. Test or temporary emails are not accepted." 
+      });
+    }
+
     // Save to database
-    const newContact = new Contact({ name, email, message });
+    const newContact = new Contact({ 
+      name: name.trim(), 
+      email: email.toLowerCase().trim(), 
+      message: message.trim() 
+    });
     await newContact.save();
     console.log("✓ Contact saved to MongoDB");
 
-    console.log("Attempting to send email via Resend...");
-    console.log("From:", process.env.EMAIL_USER);
-    console.log("To:", NOTIFICATION_EMAIL);
-
+    console.log("Attempting to send notification email to Aravindh...");
     // Send email using Resend to your personal Gmail
-    const { data, error } = await resend.emails.send({
+    const { data: notificationData, error: notificationError } = await resend.emails.send({
       from: process.env.EMAIL_USER,
-      to: [NOTIFICATION_EMAIL], // Changed to your personal Gmail
+      to: [NOTIFICATION_EMAIL],
       subject: `New Contact Message from ${name}`,
       text: `Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`,
       html: `<p><strong>Name:</strong> ${name}</p><p><strong>Email:</strong> ${email}</p><p><strong>Message:</strong></p><p>${message}</p>`,
     });
 
-    if (error) {
-      console.error("✗ Resend Error:", error);
-      throw error;
+    if (notificationError) {
+      console.error("✗ Resend Notification Error:", notificationError);
+      // We log the error but don't abort since database storage was successful
+    } else {
+      console.log("✓ Notification email sent successfully via Resend!");
     }
 
-    console.log("✓ Email sent successfully via Resend!");
-    console.log("Message ID:", data.id);
+    console.log(`Attempting to send auto-reply to viewer (${email})...`);
+    // Send dynamic styled auto-reply to the visitor
+    const { data: autoReplyData, error: autoReplyError } = await resend.emails.send({
+      from: process.env.EMAIL_USER,
+      to: [email.toLowerCase().trim()],
+      subject: "Thanks for reaching out! - Aravindh Prabu",
+      html: `
+        <div style="background-color: #f8fafc; padding: 40px 20px; font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1e293b; line-height: 1.6;">
+          <div style="max-width: 580px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);">
+            <!-- Decorative Header Gradient -->
+            <div style="background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); padding: 35px 30px; text-align: center;">
+              <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.5px;">Message Received!</h1>
+              <p style="color: #c7d2fe; margin: 8px 0 0 0; font-size: 14px; font-weight: 500;">Thank you for getting in touch</p>
+            </div>
+            
+            <!-- Email Body -->
+            <div style="padding: 35px 30px;">
+              <p style="margin-top: 0; font-size: 16px; font-weight: 600; color: #0f172a;">Hi ${name.trim()},</p>
+              
+              <p style="font-size: 15px; color: #475569; margin-bottom: 24px;">
+                Thank you for reaching out! I wanted to let you know that I have received your message successfully. I really appreciate you taking the time to visit my portfolio website.
+              </p>
+              
+              <div style="background-color: #f1f5f9; border-radius: 12px; padding: 20px; border-left: 4px solid #6366f1; margin-bottom: 28px;">
+                <p style="margin: 0; font-size: 11px; text-transform: uppercase; font-weight: 700; color: #64748b; letter-spacing: 0.5px;">Your message excerpt</p>
+                <p style="margin: 8px 0 0 0; font-size: 14px; color: #334155; font-style: italic; white-space: pre-line;">"${message.trim().length > 200 ? message.trim().substring(0, 200) + '...' : message.trim()}"</p>
+              </div>
+              
+              <p style="font-size: 15px; color: #475569; margin-bottom: 30px;">
+                I am currently reviewing the details and will get back to you with a response as soon as possible.
+              </p>
+              
+              <hr style="border: 0; border-top: 1px solid #e2e8f0; margin-bottom: 24px;" />
+              
+              <!-- Signature / Footer details -->
+              <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                  <td>
+                    <p style="margin: 0; font-size: 14px; font-weight: 700; color: #0f172a;">Aravindh Prabu</p>
+                    <p style="margin: 2px 0 0 0; font-size: 12px; color: #64748b; font-weight: 500;">Developer & Student</p>
+                    <p style="margin: 8px 0 0 0; font-size: 12px;">
+                      <a href="https://aravindhprabu.me" style="color: #4f46e5; text-decoration: none; font-weight: 600;">aravindhprabu.me</a>
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </div>
+            
+            <!-- Footer disclaimer -->
+            <div style="background-color: #f8fafc; padding: 20px 30px; border-top: 1px solid #e2e8f0; text-align: center;">
+              <p style="margin: 0; font-size: 11px; color: #94a3b8; font-weight: 500;">
+                This is an automated confirmation of your message submission. Please do not reply directly to this email.
+              </p>
+            </div>
+          </div>
+        </div>
+      `
+    });
 
-    res.status(201).json({ success: true, message: "Message stored and email sent!" });
+    if (autoReplyError) {
+      console.error("✗ Resend Auto-Reply Error:", autoReplyError);
+    } else {
+      console.log("✓ Auto-reply email sent successfully to viewer!");
+    }
+
+    res.status(201).json({ success: true, message: "Message stored and confirmation email sent!" });
   } catch (error) {
     console.error("\n✗ ERROR in /api/contact:");
-    console.error("Error Name:", error.name);
     console.error("Error Message:", error.message);
-    console.error("Error Stack:", error.stack);
-
     res.status(500).json({
       success: false,
       error: "Internal Server Error",
@@ -188,12 +313,11 @@ app.post("/api/contact", async (req, res) => {
 
 app.get("/api/messages", async (req, res) => {
   try {
-    const messages = await Contact.find();
-    console.log(`✓ Fetched ${messages.length} messages from database`);
+    const messages = await Contact.find().sort({ createdAt: -1 });
+    console.log(`✓ Fetched ${messages.length} messages from database (sorted by date)`);
     res.json(messages);
   } catch (error) {
     console.error("✗ Error fetching messages:", error.message);
-    console.error("Full Error:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });

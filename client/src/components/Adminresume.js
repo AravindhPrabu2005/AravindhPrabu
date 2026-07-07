@@ -166,7 +166,12 @@ export default function AdminResumePage() {
                     <tbody className="divide-y divide-slate-100">
                       {history.map(email => (
                         <tr key={email._id} className="hover:bg-slate-50/40 transition-colors duration-200">
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-slate-700 break-all">{email.email}</td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className="text-sm font-semibold text-slate-700 block break-all">{email.email}</span>
+                            <span className="text-[10px] text-slate-400 block mt-0.5">
+                              {email.sentAt ? new Date(email.sentAt).toLocaleString() : "Date N/A"}
+                            </span>
+                          </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span className={`inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full ${
                               email.status === "approved" 

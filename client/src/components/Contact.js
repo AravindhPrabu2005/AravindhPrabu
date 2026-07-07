@@ -11,13 +11,75 @@ export default function Contact() {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
+    const isLegitimateEmail = (email) => {
+        if (!email) return false;
+        const lower = email.toLowerCase().trim();
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(lower)) return false;
+
+        const blockedLocalParts = [
+            "test", "fake", "temp", "spam", "dummy", "admin", "noreply", 
+            "no-reply", "null", "undefined", "abcd", "abc", "testing", "user"
+        ];
+        
+        const blockedDomains = [
+            "example.com", "example.org", "example.net", "test.com", "test.org", "test.net",
+            "tempmail.com", "tempmail.org", "mailinator.com", "yopmail.com", 
+            "10minutemail.com", "dispostable.com", "getairmail.com", "throwawaymail.com",
+            "guerrillamail.com", "maildrop.cc", "sharklasers.com", "trashmail.com",
+            "email.com", "gmailinator.com"
+        ];
+
+        const parts = lower.split("@");
+        if (parts.length !== 2) return false;
+        const localPart = parts[0];
+        const domain = parts[1];
+
+        if (blockedLocalParts.includes(localPart)) return false;
+        if (localPart.includes("test") || localPart.includes("fake") || localPart.includes("spam")) {
+            if (localPart === "test" || (localPart.startsWith("test") && isNaN(localPart.replace("test", "")))) {
+                return false;
+            }
+        }
+
+        if (blockedDomains.includes(domain)) return false;
+        if (domain.includes("example") || domain.includes("test") || domain.includes("fake") || domain.includes("tempmail")) {
+            return false;
+        }
+
+        return true;
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
+        
+        const trimmedName = formData.name.trim();
+        const trimmedEmail = formData.email.trim();
+        const trimmedMessage = formData.message.trim();
+
+        // 1. Enforce all fields are required
+        if (!trimmedName || !trimmedEmail || !trimmedMessage) {
+            setStatus("Error: All fields are required.");
+            setTimeout(() => setStatus(""), 5000);
+            return;
+        }
+
+        // 2. Validate email legitimacy
+        if (!isLegitimateEmail(trimmedEmail)) {
+            setStatus("Error: Please enter a valid, legitimate email. Test or fake domains are not allowed.");
+            setTimeout(() => setStatus(""), 6000);
+            return;
+        }
+
         setStatus("Sending...");
         setIsLoading(true);
 
         try {
-            const response = await axiosInstance.post("/api/contact", formData, {
+            const response = await axiosInstance.post("/api/contact", {
+                name: trimmedName,
+                email: trimmedEmail,
+                message: trimmedMessage
+            }, {
                 headers: { "Content-Type": "application/json" }
             });
 
@@ -25,13 +87,14 @@ export default function Contact() {
                 setStatus("Message sent successfully!");
                 setFormData({ name: "", email: "", message: "" });
             } else {
-                setStatus("Failed to send message");
+                setStatus("Error: Failed to send message");
             }
         } catch (error) {
-            setStatus("Error occurred");
+            const errMsg = error.response?.data?.message || "Error occurred while sending message";
+            setStatus(errMsg.startsWith("Error") ? errMsg : `Error: ${errMsg}`);
         } finally {
             setIsLoading(false);
-            setTimeout(() => setStatus(""), 4000);
+            setTimeout(() => setStatus(""), 6000);
         }
     };
 
@@ -97,7 +160,7 @@ export default function Contact() {
                         </div>
                         <div className="flex-1">
                             <p className="text-xs text-gray-400 mb-1">Phone</p>
-                            <p className="text-sm font-semibold text-white group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-purple-300 group-hover:to-pink-300 transition-all duration-300 underline decoration-purple-500/30 group-hover:decoration-purple-500 decoration-2 underline-offset-2">
+                            <p className="text-sm font-semibold text-white group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-purple-300 group-hover:to-pink-300 transition-all duration-300 underline decoration-purple-500/30 group-hover:decoration-purple-500 decoration-2 underline-offset-2 font-mono">
                                 +91 98652 14164
                             </p>
                         </div>
@@ -118,8 +181,7 @@ export default function Contact() {
                                     name="name"
                                     value={formData.name}
                                     onChange={handleChange}
-                                    placeholder="John Doe"
-                                    className="w-full px-3 py-2 bg-slate-700/50 border border-purple-500/30 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-300"
+                                    className="w-full px-3 py-2 bg-slate-700/50 border border-purple-500/30 rounded-lg text-sm text-white focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-300"
                                     required
                                 />
                             </div>
@@ -133,8 +195,7 @@ export default function Contact() {
                                     name="email"
                                     value={formData.email}
                                     onChange={handleChange}
-                                    placeholder="john@example.com"
-                                    className="w-full px-3 py-2 bg-slate-700/50 border border-purple-500/30 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-300"
+                                    className="w-full px-3 py-2 bg-slate-700/50 border border-purple-500/30 rounded-lg text-sm text-white focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-300"
                                     required
                                 />
                             </div>
