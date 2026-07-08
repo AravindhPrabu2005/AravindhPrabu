@@ -49,16 +49,16 @@ export default function Projects() {
                                         src={project.image}
                                         alt={project.title}
                                     />
-                                    {/* Gradient overlay */}
-                                    <div className='absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/50 to-transparent opacity-60 group-hover:opacity-80 transition-opacity duration-500'></div>
+                                    {/* Glassmorphic hover overlay */}
+                                    <div className='absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-all duration-500 backdrop-blur-[2px] z-10'></div>
                                     
                                     {/* View Project Button Overlay */}
-                                    <div className='absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500'>
+                                    <div className='absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 z-20'>
                                         <a 
                                             href={project.github}
                                             target='_blank'
                                             rel="noopener noreferrer"
-                                            className='px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold rounded-full transform translate-y-4 group-hover:translate-y-0 transition-all duration-500 hover:from-purple-600 hover:to-pink-600 flex items-center gap-2 shadow-lg'
+                                            className='px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold rounded-full transform translate-y-4 group-hover:translate-y-0 transition-all duration-500 hover:from-purple-600 hover:to-pink-600 flex items-center gap-2 shadow-lg shadow-purple-500/20'
                                         >
                                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
