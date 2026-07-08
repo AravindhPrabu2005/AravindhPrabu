@@ -739,8 +739,14 @@ app.post("/api/settings/resume", requireAuth, upload.single("resume"), async (re
 app.get("/api/settings/resume/view", (req, res) => {
   try {
     const { token } = req.query;
-    if (token !== "Saibaba@123@123") {
-      return res.status(401).send("Unauthorized");
+    if (!token) {
+      return res.status(401).send("Unauthorized: Missing token");
+    }
+
+    try {
+      jwt.verify(token, JWT_SECRET);
+    } catch (err) {
+      return res.status(401).send("Unauthorized: Invalid or expired token");
     }
 
     const resumePath = path.join(__dirname, "public", "Aravindh Prabu Resume.pdf");
