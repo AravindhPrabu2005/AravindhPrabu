@@ -14,6 +14,12 @@ const multer = require("multer");
 const app = express();
 app.set("trust proxy", true);
 const PORT = process.env.PORT || 5000;
+
+// Ensure public directory exists
+const publicDir = path.join(__dirname, "public");
+if (!fs.existsSync(publicDir)) {
+  fs.mkdirSync(publicDir, { recursive: true });
+}
 app.use(cors());
 app.use(bodyParser.json());
 
