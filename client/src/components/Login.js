@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
+import axiosInstance from "./axiosInstance";
 
 export default function Login() {
     const [email, setEmail] = useState("");
@@ -13,21 +14,31 @@ export default function Login() {
     const [searchParams] = useSearchParams();
     const redirectUrl = searchParams.get("redirect") || "/admin/messages";
 
-    const handleLogin = (e) => {
+    const handleLogin = async (e) => {
         e.preventDefault();
         setError("");
         setLoading(true);
 
-        setTimeout(() => {
-            if (email === "aravindhprabu2005@gmail.com" && password === "Saibaba@123@123") {
+        try {
+            const response = await axiosInstance.post("/api/admin/login", {
+                email: email.trim(),
+                password: password
+            });
+
+            if (response.data?.success) {
                 localStorage.setItem("admin_authenticated", "true");
-                localStorage.setItem("admin_token", password);
+                localStorage.setItem("admin_token", response.data.token);
                 navigate(redirectUrl);
             } else {
-                setError("Invalid email address or password.");
+                setError("Invalid response format from server.");
                 setLoading(false);
             }
-        }, 1000);
+        } catch (err) {
+            console.error("Login request failed:", err);
+            const errMsg = err.response?.data?.error || "Invalid email address or password.";
+            setError(errMsg);
+            setLoading(false);
+        }
     };
 
     return (
