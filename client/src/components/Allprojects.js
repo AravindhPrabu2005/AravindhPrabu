@@ -1,8 +1,120 @@
 import React, { useState, useEffect } from 'react';
 import axiosInstance from './axiosInstance';
+import { getCachedOrFallback, setCache } from "./cacheHelper";
+
+const STATIC_PROJECTS_FALLBACK = [
+  {
+    "_id": "6a4f3e67d654ec0840418c55",
+    "title": "Psychiatrist consultation portal",
+    "image": "https://res.cloudinary.com/dpoufodoc/image/upload/v1783578215/projects/xnkaf2z8dpfewz7i3hjl.png",
+    "description": "➔ Built a real-time consultation platform with Socket.IO messenger and patient care module for treatment tracking. \r\n➔ Improved booking reliability by 90% by preventing duplicate bookings and race condition using MongoDB transaction. \r\n➔ Integrated Stripe payment gateway and implemented a psychology consultation chatbot using the GROQ API. ",
+    "github": "https://github.com/AravindhPrabu2005/Psychiatrist-Consultation-Portal",
+    "stack": ["React.js", "Node.js", "MongoDB", "Socket.IO", "GROQ API.", "Stripe"],
+    "featured": true,
+    "liveLink": "https://psycareofficial.vercel.app/",
+    "videoLink": "",
+    "featuredOrder": 0,
+    "allOrder": 0
+  },
+  {
+    "_id": "6a4f3c4fd654ec0840418c4c",
+    "title": "Event Booking Platform",
+    "image": "https://res.cloudinary.com/dpoufodoc/image/upload/v1783577678/projects/mox61rc6y2x9dve0akdb.png",
+    "description": "➔ Built a modular backend using microservices architecture (Auth, Booking, Event) services with custom API Gateway. \r\n➔ Deployed Dockerized services on AWS EC2 with NGINX reverse proxy and full HTTPS configuration. \r\n➔ Implemented CI/CD pipeline in GitHub Actions, used Redis for caching the events and API rate limiting per IP.",
+    "github": "https://github.com/AravindhPrabu2005/Event-booking-platform",
+    "stack": ["AWS", "microservices", "Docker compose", "Redis", "Rate limiting", "Github Actions", "React.js", "MongoDB", "Node.js"],
+    "featured": true,
+    "liveLink": "https://kootamx.vercel.app/login",
+    "videoLink": "",
+    "featuredOrder": 1,
+    "allOrder": 1
+  },
+  {
+    "_id": "6a4dedc3d03c5ca165873a1c",
+    "title": "Point of sale",
+    "image": "https://res.cloudinary.com/dpoufodoc/image/upload/v1783578886/projects/t4xskmia17pyvvgvidmx.png",
+    "description": "A cloud-based Point of Sale system for cafes and restaurants with role-based auth, real-time sync, QR self-ordering, kitchen display, and multi-payment support.",
+    "github": "https://github.com/nandhakrishnanp/Odoo-x-KAHE",
+    "stack": ["React", "Node.js", "PostgreSQL", "Drizzle ORM"],
+    "featured": true,
+    "liveLink": "",
+    "videoLink": "https://drive.google.com/file/d/1MvltLW-l7fX7Pz5RDLe48zxl2zmKo48a/view With voice",
+    "featuredOrder": 2,
+    "allOrder": 2
+  },
+  {
+    "_id": "6a4f4383d654ec0840418c5d",
+    "title": "Travel companion application",
+    "image": "https://res.cloudinary.com/dpoufodoc/image/upload/v1783579522/projects/szla7n9a4lp8f5yqzyq7.png",
+    "description": "Developed Global Trotter, a full-stack travel planning application with secure authentication, trip management, and itinerary creation. Built using the MERN stack with a responsive UI and RESTful APIs for a seamless user experience.",
+    "github": "https://github.com/AravindhPrabu2005/Global-trotter-oodo",
+    "stack": ["React.js", "Node.js", "PostgreSQL"],
+    "featured": false,
+    "liveLink": "",
+    "videoLink": "https://www.youtube.com/watch?v=pD1fkyAfyhQ&feature=youtu.be",
+    "allOrder": 3
+  },
+  {
+    "_id": "6a4f456c29687d3b6238e559",
+    "title": "Online learning platform",
+    "image": "https://res.cloudinary.com/dpoufodoc/image/upload/v1783580012/projects/jlimtu0oymzhjaekylzq.png",
+    "description": "A comprehensive online learning platform designed for course creation, management, and student engagement.",
+    "github": "https://github.com/AravindhPrabu2005/LearnSphere-",
+    "stack": ["Next.js", "Go", "PostgreSQL"],
+    "featured": false,
+    "videoLink": "https://drive.google.com/file/d/1meHdsImJ6q68nywTN0A-ydfOSQz2rEs4/view?usp=sharing",
+    "liveLink": "",
+    "allOrder": 4
+  },
+  {
+    "_id": "6a4f3a61d654ec0840418c49",
+    "title": "Agent assisted E-commerce website",
+    "image": "https://res.cloudinary.com/dpoufodoc/image/upload/v1783577185/projects/gznw6wk8yetezv61ndgl.png",
+    "description": "Developed an Agentic RAG chatbot for intelligent product discovery using GROQ API and ChromaDB vector search. \r\nOrchestrated a multi-agent product recommendation system with 2 agents utilizing LangGraph. \r\nImplemented Review Summarization and Inventory Demand Prediction agents using LangChain. ",
+    "github": "https://github.com/AravindhPrabu2005/Agent-Assisted_E-commerce_Platform",
+    "stack": ["React", "Node", "MongoDB", "ChromaDB", "LangGraph", "LangChain", "GROQ API"],
+    "featured": false,
+    "liveLink": "https://ekadai.vercel.app/",
+    "videoLink": "",
+    "allOrder": 5
+  },
+  {
+    "_id": "6a4dee47d03c5ca165873a1f",
+    "title": "Food redistribution app",
+    "image": "https://res.cloudinary.com/dpoufodoc/image/upload/v1783492167/projects/flfex4eyesrpvf5wxs90.webp",
+    "description": "AkshyaPatra is a Food Distribution App Connects NGO and Food Donors to Distribute Surplus Foods From Events , Hotels etc..,",
+    "github": "https://github.com/nandhakrishnanp/akshayapathra",
+    "stack": ["React Native", "Node js", "MongoDb", "Next js"],
+    "featured": false,
+    "allOrder": 6
+  },
+  {
+    "_id": "6a4deec2d03c5ca165873a26",
+    "title": "Skill sharing platform",
+    "image": "https://res.cloudinary.com/dpoufodoc/image/upload/v1783492290/projects/bhm83bk6c9gsuyj1vp7l.webp",
+    "description": "SkillHive is a skill-sharing platform designed for instructors and learners to connect, share knowledge, and grow together.",
+    "github": "https://github.com/nandhakrishnanp/SkillHive",
+    "stack": ["React.js", "Express.js", "MongoDb"],
+    "featured": false,
+    "allOrder": 7
+  },
+  {
+    "_id": "6a4e79a5e1f69379e64462d6",
+    "title": "Tenant management system",
+    "image": "https://res.cloudinary.com/dpoufodoc/image/upload/v1783527844/projects/d0vg6fyw5vmc545gugve.png",
+    "description": "RK Tenants is a property management platform designed for owners to manage portions, tenant profiles, and open-ended rental agreements. The system automates monthly rent invoicing, supports advance payments, and allows owners to quickly record hand-collected cash payments. It calculates prorated rent and deposit refunds during tenant-initiated vacating while preserving invoice access for vacated past tenants.",
+    "github": "https://github.com/AravindhPrabu2005/RK-Tenents",
+    "stack": ["React.js", "Node.js", "MongoDB"],
+    "featured": false,
+    "allOrder": 8
+  }
+];
 
 const Allprojects = () => {
-  const [projects, setProjects] = useState([]);
+  const [projects, setProjects] = useState(() => {
+    const cachedAll = getCachedOrFallback("cache_projects", STATIC_PROJECTS_FALLBACK);
+    return (cachedAll || []).sort((a, b) => (a.allOrder || 0) - (b.allOrder || 0));
+  });
   const [modalImage, setModalImage] = useState(null);
 
   const openModal = (image) => {
@@ -16,8 +128,11 @@ const Allprojects = () => {
   useEffect(() => {
     axiosInstance.get("/api/projects")
       .then(res => {
-        const sorted = (res.data || []).sort((a, b) => (a.allOrder || 0) - (b.allOrder || 0));
-        setProjects(sorted);
+        if (res.data && Array.isArray(res.data)) {
+          setCache("cache_projects", res.data);
+          const sorted = res.data.sort((a, b) => (a.allOrder || 0) - (b.allOrder || 0));
+          setProjects(sorted);
+        }
       })
       .catch(err => console.error("Error loading projects:", err));
   }, []);

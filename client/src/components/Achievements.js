@@ -1,13 +1,104 @@
 import React, { useState, useEffect } from 'react';
 import axiosInstance from './axiosInstance';
+import { getCachedOrFallback, setCache } from "./cacheHelper";
+
+const STATIC_ACHIEVEMENTS_FALLBACK = [
+  {
+    "_id": "6a47c4b6975f037a6d2be552",
+    "title": "TechXcelerate 2025",
+    "position": "2nd Place",
+    "description": "Developed a blockchain-based voting system tailored for university elections using JavaScript blockchain. Integrated a chatbot to assist users in selecting candidates by answering common queries. Awarded a cash prize of ₹25,000.",
+    "certificate": "https://res.cloudinary.com/dpoufodoc/image/upload/v1783088307/achievements/kepw0rvgnrpdbqntngsk.jpg",
+    "type": 1
+  },
+  {
+    "_id": "6a47c4b7975f037a6d2be554",
+    "title": "L&T Hack Appsters '25",
+    "position": "1st Place",
+    "description": "Designed a skill-sharing platform that allows users to teach and learn from one another. Introduced a barter-style knowledge exchange system. Integrated Gemini API to enable AI mentorship and generate quizzes. Secured a cash prize of ₹25,000.",
+    "certificate": "https://res.cloudinary.com/dpoufodoc/image/upload/v1783088308/achievements/jhd8b3u338mrscaxadtv.jpg",
+    "type": 1
+  },
+  {
+    "_id": "6a47c4b9975f037a6d2be556",
+    "title": "SRCAS Hackathon 2024",
+    "position": "Finalist",
+    "description": "Built a decentralized renewable energy trading platform using React.js, Node.js, MongoDB, and Socket.io. Enabled real-time bidding for energy transactions. Achieved a 10% improvement in transaction efficiency and a 15% cost reduction through optimized algorithms.",
+    "certificate": "https://res.cloudinary.com/dpoufodoc/image/upload/v1783088310/achievements/ewqx2gvwmmq0j6yvz0wp.jpg",
+    "type": 1
+  },
+  {
+    "_id": "6a47c4ba975f037a6d2be558",
+    "title": "SREC INNOVATE 2024",
+    "position": "The Best Innovation Award",
+    "description": "Created a web-based Deepfake detection system using HTML, CSS, and the open-source MesoNet algorithm. Focused on identifying manipulated media through visual pattern analysis",
+    "certificate": "https://res.cloudinary.com/dpoufodoc/image/upload/v1783088311/achievements/tx4elqm9aue8babcstex.jpg",
+    "type": 2
+  },
+  {
+    "_id": "6a47c4bb975f037a6d2be55a",
+    "title": "ICMRSH 2024 - International Conference",
+    "position": "Best Paper Award",
+    "description": "Published a research paper on \"Digital Identity Verification Using Blockchain,\" detailing a secure and intelligent verification process leveraging smart contracts and AI-driven security bots.",
+    "certificate": "https://res.cloudinary.com/dpoufodoc/image/upload/v1783088312/achievements/gmsme3o1xal0bpnwdzqt.jpg",
+    "type": 2
+  },
+  {
+    "_id": "6a47c4bd975f037a6d2be55c",
+    "title": "Design Thinking Challenge 6.0",
+    "position": "2nd Place",
+    "description": "Developed a civic engagement platform named Portal India to enable citizens to propose and discuss government schemes. Integrated interactive features such as polls, quizzes, forums, webinars, and live feedback. Received a cash award of ₹750.",
+    "certificate": "https://res.cloudinary.com/dpoufodoc/image/upload/v1783088313/achievements/ayukueb5h6djnoa4lad1.jpg",
+    "type": 2
+  },
+  {
+    "_id": "6a47c4be975f037a6d2be55e",
+    "title": "Tech Sprint Phase-1",
+    "position": "Top Performer",
+    "description": "Proposed an innovative idea titled \"AI-Powered Firewall Protection Suite\", which incorporates AI to dynamically detect and respond to emerging cyber threats, offering a smarter and adaptive security solution.",
+    "certificate": "https://res.cloudinary.com/dpoufodoc/image/upload/v1783088314/achievements/hjujqyhvcr48gmmest6b.jpg",
+    "type": 2
+  },
+  {
+    "_id": "6a47c4bf975f037a6d2be560",
+    "title": "Curio Prompt cynosure 2k23 (Prompt Engineering contest)",
+    "position": "2nd Place",
+    "description": "Participated in a prompt engineering contest where I successfully crafted creative strategies to elicit responses from ChatGPT on prompts typically restricted or unanswered.",
+    "certificate": "https://res.cloudinary.com/dpoufodoc/image/upload/v1783088315/achievements/nexmrj9rnstecn4iaeyw.jpg",
+    "type": 2
+  },
+  {
+    "_id": "6a47c4c0975f037a6d2be562",
+    "title": "Web Design cynosure 2k23",
+    "position": "2nd Place",
+    "description": "Tasked with designing an e-commerce platform on the spot. Developed a responsive homepage featuring top-banner image sliders and a structured product listing section.",
+    "certificate": "https://res.cloudinary.com/dpoufodoc/image/upload/v1783088316/achievements/wccprgczsqzzzlytf6yp.jpg",
+    "type": 2
+  },
+  {
+    "_id": "6a47c4c1975f037a6d2be564",
+    "title": "Q'CIPHER quiz competition",
+    "position": "2nd Place",
+    "description": "Competed in a technical quiz organized by the FOSS Club, focusing on Free and Open Source Software tools and technologies commonly used in development.",
+    "certificate": "https://res.cloudinary.com/dpoufodoc/image/upload/v1783088318/achievements/oga5eanmuavuld183ab6.jpg",
+    "type": 2
+  }
+];
 
 const Achievements = () => {
-  const [achievements, setAchievements] = useState([]);
+  const [achievements, setAchievements] = useState(() => {
+    return getCachedOrFallback("cache_achievements", STATIC_ACHIEVEMENTS_FALLBACK);
+  });
   const [modalImage, setModalImage] = useState(null);
 
   useEffect(() => {
     axiosInstance.get("/api/achievements")
-      .then(res => setAchievements(res.data || []))
+      .then(res => {
+        if (res.data && Array.isArray(res.data)) {
+          setCache("cache_achievements", res.data);
+          setAchievements(res.data);
+        }
+      })
       .catch(err => console.error("Error loading achievements:", err));
   }, []);
 

@@ -1,14 +1,39 @@
 import React, { useState, useEffect } from 'react';
 import axiosInstance from './axiosInstance';
+import { getCachedOrFallback, setCache } from "./cacheHelper";
+
+const STATIC_CERTIFICATIONS_FALLBACK = [
+  {
+    "_id": "6a47c4c2975f037a6d2be567",
+    "title": "The Complete Full-Stack Web Development Bootcamp",
+    "provider": "Udemy",
+    "image": "https://res.cloudinary.com/dpoufodoc/image/upload/v1783088319/certifications/ybex60zyxc8x0xvpsr01.png",
+    "description": "A comprehensive course covering both frontend and backend technologies, including HTML, CSS, JavaScript, React, Node.js, and more."
+  },
+  {
+    "_id": "6a47c4c4975f037a6d2be569",
+    "title": "Software Development Lifecycle Fundamentals",
+    "provider": "Great Learning",
+    "image": "https://res.cloudinary.com/dpoufodoc/image/upload/v1783088320/certifications/bcdqibe4nkou6tubrljk.jpg",
+    "description": "An introduction to the software development lifecycle, covering methodologies, processes, and best practices for software development."
+  }
+];
 
 const Certifications = () => {
-  const [certifications, setCertifications] = useState([]);
+  const [certifications, setCertifications] = useState(() => {
+    return getCachedOrFallback("cache_certifications", STATIC_CERTIFICATIONS_FALLBACK);
+  });
   const [modalImage, setModalImage] = useState(null);
   const [modalTitle, setModalTitle] = useState('');
 
   useEffect(() => {
     axiosInstance.get("/api/certifications")
-      .then(res => setCertifications(res.data || []))
+      .then(res => {
+        if (res.data && Array.isArray(res.data)) {
+          setCache("cache_certifications", res.data);
+          setCertifications(res.data);
+        }
+      })
       .catch(err => console.error("Error loading certifications:", err));
   }, []);
 

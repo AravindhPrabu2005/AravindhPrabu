@@ -2,13 +2,62 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { FaLongArrowAltRight } from 'react-icons/fa';
 import axiosInstance from './axiosInstance';
+import { getCachedOrFallback, setCache } from "./cacheHelper";
+
+const STATIC_EXPERIENCES_FALLBACK = [
+  {
+    "_id": "6a47cbd8a1160cd0b7d80126",
+    "role": "FREELANCING | FRONT-END DEVELOPER",
+    "logo": "https://res.cloudinary.com/dpoufodoc/image/upload/v1783090132/experience/a5enhpuw385ybxk3zxgn.png",
+    "duration": "Jun 2025 – Aug 2025 ",
+    "location": "Coimbatore, India",
+    "points": [
+      "Collaborated with a freelancer to work on holidayjoy.com project.",
+      "Managed tasks via Jira and contributed on GitHub.",
+      "Utilized React.js and TailwindCSS in the tech stack."
+    ]
+  },
+  {
+    "_id": "6a47cbd9a1160cd0b7d80128",
+    "role": "INTERNSHIP | RBG.ai",
+    "logo": "https://res.cloudinary.com/dpoufodoc/image/upload/v1783090134/experience/rjtbv0ylvcs8qxef9f58.jpg",
+    "duration": "Dec 2024 – Jan 2025",
+    "location": "Coimbatore, India",
+    "points": [
+      "Worked with MongoDB, Fast API and React.js with TailwindCSS.",
+      "Developed a web application for attendance & task management (Internal ERP).",
+      "Improved security by creating JWT auth and writing protected routes.",
+      "Improved User experience by adding Role based entry."
+    ]
+  },
+  {
+    "_id": "6a4f4e3d38083777688dc544",
+    "role": "Full Stack Web Developer | Project-based Engagement",
+    "logo": "https://res.cloudinary.com/dpoufodoc/image/upload/v1783586101/experience/h7baz2ftmrikdxepsrws.png",
+    "duration": "Jun 2025 - Aug 2025",
+    "location": "Coimbatore, India",
+    "points": [
+      "Worked on both frontend and backend using the MERN stack for a hospital management system.",
+      "Developed the appointment booking part and developed a basic CRM module for hospital operations.",
+      "Built a real-time messaging module with file-sharing functionality using Socket.IO and Cloudinary API.",
+      "Developed a booking assistant bot that improved booking efficiency by 50%."
+    ]
+  }
+];
 
 const Experience = () => {
-  const [experiences, setExperiences] = useState([]);
+  const [experiences, setExperiences] = useState(() => {
+    return getCachedOrFallback("cache_experiences", STATIC_EXPERIENCES_FALLBACK);
+  });
 
   useEffect(() => {
     axiosInstance.get("/api/experiences")
-      .then(res => setExperiences(res.data || []))
+      .then(res => {
+        if (res.data && Array.isArray(res.data)) {
+          setCache("cache_experiences", res.data);
+          setExperiences(res.data);
+        }
+      })
       .catch(err => console.error("Error loading experiences:", err));
   }, []);
 
