@@ -9,7 +9,9 @@ export default function Projects() {
     useEffect(() => {
         axiosInstance.get("/api/projects")
             .then(res => {
-                const featuredProjects = (res.data || []).filter(p => p.featured);
+                const featuredProjects = (res.data || [])
+                    .filter(p => p.featured)
+                    .sort((a, b) => (a.featuredOrder || 0) - (b.featuredOrder || 0));
                 setProjects(featuredProjects);
             })
             .catch(err => console.error("Error fetching projects:", err));
@@ -118,7 +120,7 @@ export default function Projects() {
                                     <h3 className="text-lg font-bold text-white leading-tight group-hover:text-purple-300 transition-colors">
                                         {project.title}
                                     </h3>
-                                    <p className='text-gray-300 text-sm leading-relaxed min-h-[48px] line-clamp-2'>
+                                    <p className='text-gray-300 text-sm leading-relaxed'>
                                         {project.description}
                                     </p>
                                     

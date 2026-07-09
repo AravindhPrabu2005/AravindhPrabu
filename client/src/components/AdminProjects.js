@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import axiosInstance from "./axiosInstance";
-import { FaPlus, FaTrash, FaEdit, FaTimes, FaGithub, FaCheck, FaProjectDiagram, FaVideo, FaExternalLinkAlt } from "react-icons/fa";
+import { FaPlus, FaTrash, FaEdit, FaTimes, FaGithub, FaCheck, FaProjectDiagram, FaVideo, FaExternalLinkAlt, FaSort } from "react-icons/fa";
 
 export default function AdminProjects() {
     const [projects, setProjects] = useState([]);
@@ -18,6 +18,12 @@ export default function AdminProjects() {
     const [liveLink, setLiveLink] = useState("");
     const [imageFile, setImageFile] = useState(null);
     const [imagePreview, setImagePreview] = useState("");
+
+    // Reordering states
+    const [reorderModalOpen, setReorderModalOpen] = useState(false);
+    const [reorderType, setReorderType] = useState("all");
+    const [tempProjects, setTempProjects] = useState([]);
+    const [draggedIndex, setDraggedIndex] = useState(null);
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
@@ -152,6 +158,80 @@ export default function AdminProjects() {
         }
     };
 
+    const openReorderModal = (type = "all") => {
+        setReorderType(type);
+        if (type === "all") {
+            setTempProjects([...projects].sort((a, b) => (a.allOrder || 0) - (b.allOrder || 0)));
+        } else {
+            setTempProjects(projects.filter(p => p.featured).sort((a, b) => (a.featuredOrder || 0) - (b.featuredOrder || 0)));
+        }
+        setReorderModalOpen(true);
+    };
+
+    const handleReorderTypeChange = (type) => {
+        setReorderType(type);
+        if (type === "all") {
+            setTempProjects([...projects].sort((a, b) => (a.allOrder || 0) - (b.allOrder || 0)));
+        } else {
+            setTempProjects(projects.filter(p => p.featured).sort((a, b) => (a.featuredOrder || 0) - (b.featuredOrder || 0)));
+        }
+    };
+
+    const handleDragStart = (e, index) => {
+        setDraggedIndex(index);
+        e.dataTransfer.effectAllowed = "move";
+        e.dataTransfer.setData("text/plain", index);
+    };
+
+    const handleDragOver = (e, index) => {
+        e.preventDefault();
+        if (draggedIndex === null || draggedIndex === index) return;
+        
+        const items = [...tempProjects];
+        const draggedItem = items[draggedIndex];
+        
+        items.splice(draggedIndex, 1);
+        items.splice(index, 0, draggedItem);
+        
+        setDraggedIndex(index);
+        setTempProjects(items);
+    };
+
+    const handleDragEnd = () => {
+        setDraggedIndex(null);
+    };
+
+    const handleDrop = (e) => {
+        e.preventDefault();
+        setDraggedIndex(null);
+    };
+
+    const handleSaveOrder = async () => {
+        setLoading(true);
+        setError("");
+        
+        const projectsOrder = tempProjects.map((proj, idx) => ({
+            id: proj._id,
+            order: idx
+        }));
+
+        try {
+            await axiosInstance.put("/api/projects/reorder", {
+                reorderType,
+                projectsOrder
+            });
+            setSuccessMessage("Projects order saved successfully!");
+            setReorderModalOpen(false);
+            fetchProjects();
+        } catch (err) {
+            console.error("Error saving project order:", err);
+            setError("Failed to save project order.");
+        } finally {
+            setLoading(false);
+            setTimeout(() => setSuccessMessage(""), 4000);
+        }
+    };
+
     return (
         <div className="w-full space-y-6">
             {/* Header section */}
@@ -165,13 +245,22 @@ export default function AdminProjects() {
                         <p className="text-xs text-slate-500">Configure your portfolio projects and home page featured items</p>
                     </div>
                 </div>
-                <button
-                    onClick={openCreateModal}
-                    className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-xs shadow-indigo-500/10 hover:shadow-md hover:shadow-indigo-500/20 active:scale-95 transition-all cursor-pointer"
-                >
-                    <FaPlus />
-                    <span>Add Project</span>
-                </button>
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => openReorderModal("all")}
+                        className="flex items-center gap-2 px-4 py-2.5 bg-slate-150 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold border border-slate-200 active:scale-95 transition-all cursor-pointer"
+                    >
+                        <FaSort />
+                        <span>Reorder Projects</span>
+                    </button>
+                    <button
+                        onClick={openCreateModal}
+                        className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-xs shadow-indigo-500/10 hover:shadow-md hover:shadow-indigo-500/20 active:scale-95 transition-all cursor-pointer"
+                    >
+                        <FaPlus />
+                        <span>Add Project</span>
+                    </button>
+                </div>
             </div>
 
             {/* Notification Banner */}
@@ -423,6 +512,113 @@ export default function AdminProjects() {
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Reorder Modal Dialog */}
+            {reorderModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-fadeIn">
+                    <div className="bg-white border border-slate-200/80 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col max-h-[85vh]">
+                        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+                            <div>
+                                <h3 className="text-base font-bold text-slate-900">Reorder Projects</h3>
+                                <p className="text-xs text-slate-500">Drag and drop items to rearrange their rank order</p>
+                            </div>
+                            <button 
+                                onClick={() => setReorderModalOpen(false)}
+                                className="p-1.5 bg-slate-50 hover:bg-slate-100 text-slate-400 hover:text-slate-700 rounded-lg transition-colors cursor-pointer"
+                            >
+                                <FaTimes />
+                            </button>
+                        </div>
+
+                        {/* Reorder Tabs */}
+                        <div className="flex border-b border-slate-100 bg-slate-50/50 p-2 gap-2">
+                            <button
+                                type="button"
+                                onClick={() => handleReorderTypeChange("all")}
+                                className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                                    reorderType === "all"
+                                        ? "bg-white text-indigo-600 shadow-sm border border-slate-200"
+                                        : "text-slate-550 hover:text-slate-850 hover:bg-slate-100"
+                                }`}
+                            >
+                                All Projects Page Order
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => handleReorderTypeChange("featured")}
+                                className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                                    reorderType === "featured"
+                                        ? "bg-white text-indigo-600 shadow-sm border border-slate-200"
+                                        : "text-slate-550 hover:text-slate-850 hover:bg-slate-100"
+                                }`}
+                            >
+                                Featured Section Order
+                            </button>
+                        </div>
+
+                        {/* Drag and Drop List */}
+                        <div className="flex-1 overflow-y-auto p-6 space-y-2 bg-slate-50/30">
+                            {tempProjects.map((project, idx) => (
+                                <div
+                                    key={project._id}
+                                    draggable={true}
+                                    onDragStart={(e) => handleDragStart(e, idx)}
+                                    onDragOver={(e) => handleDragOver(e, idx)}
+                                    onDragEnd={handleDragEnd}
+                                    onDrop={handleDrop}
+                                    className={`flex items-center gap-4 p-3 bg-white border border-slate-200 rounded-xl shadow-xs transition-all cursor-grab active:cursor-grabbing select-none ${
+                                        draggedIndex === idx 
+                                            ? "opacity-40 bg-indigo-50/30 border-dashed border-indigo-300 shadow-none scale-98"
+                                            : "hover:border-slate-350 hover:shadow-sm"
+                                    }`}
+                                >
+                                    <div className="text-slate-400 hover:text-slate-700 p-1 flex items-center justify-center">
+                                        <FaSort className="w-4 h-4" />
+                                    </div>
+                                    
+                                    <div className="w-12 h-12 rounded-lg overflow-hidden bg-slate-100 border border-slate-200 flex-shrink-0 flex items-center justify-center">
+                                        <img src={project.image} alt={project.title} className="w-full h-full object-cover" />
+                                    </div>
+
+                                    <div className="flex-1 min-w-0">
+                                        <h4 className="text-sm font-bold text-slate-800 truncate">{project.title}</h4>
+                                        <p className="text-[10px] text-slate-450 truncate">{project.description}</p>
+                                    </div>
+
+                                    <div className="flex-shrink-0 px-2.5 py-1 bg-indigo-50 border border-indigo-100 rounded-md text-[10px] font-bold text-indigo-600">
+                                        #{idx + 1}
+                                    </div>
+                                </div>
+                            ))}
+
+                            {tempProjects.length === 0 && (
+                                <div className="text-center py-12 text-slate-500 text-xs border border-dashed border-slate-200 rounded-xl bg-white">
+                                    No projects in this category to reorder.
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Modal Footer */}
+                        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-100 bg-white">
+                            <button 
+                                type="button"
+                                onClick={() => setReorderModalOpen(false)}
+                                className="px-4 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-650 hover:text-slate-800 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                type="button"
+                                onClick={handleSaveOrder}
+                                disabled={loading || tempProjects.length === 0}
+                                className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl text-xs shadow-xs shadow-indigo-500/10 hover:shadow-md hover:shadow-indigo-500/20 transition-all disabled:opacity-50 cursor-pointer"
+                            >
+                                {loading ? "Saving Order..." : "Save Order"}
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

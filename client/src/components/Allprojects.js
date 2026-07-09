@@ -6,7 +6,10 @@ const Allprojects = () => {
 
   useEffect(() => {
     axiosInstance.get("/api/projects")
-      .then(res => setProjects(res.data || []))
+      .then(res => {
+        const sorted = (res.data || []).sort((a, b) => (a.allOrder || 0) - (b.allOrder || 0));
+        setProjects(sorted);
+      })
       .catch(err => console.error("Error loading projects:", err));
   }, []);
 

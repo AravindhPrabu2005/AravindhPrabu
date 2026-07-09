@@ -112,7 +112,9 @@ const projectSchema = new mongoose.Schema({
   stack: [String],
   featured: { type: Boolean, default: false },
   videoLink: { type: String, default: "" },
-  liveLink: { type: String, default: "" }
+  liveLink: { type: String, default: "" },
+  featuredOrder: { type: Number, default: 0 },
+  allOrder: { type: Number, default: 0 }
 });
 const Project = mongoose.model("Project", projectSchema);
 
@@ -809,9 +811,35 @@ const uploadImageToCloudinary = (fileBuffer, folder = "portfolio") => {
 // GET all projects
 app.get("/api/projects", async (req, res) => {
   try {
-    const projects = await Project.find();
+    const projects = await Project.find().sort({ allOrder: 1, _id: 1 });
     res.json(projects);
   } catch (error) {
+    res.status(500).json({ error: "Internal Server Error", details: error.message });
+  }
+});
+
+// PUT reorder projects
+app.put("/api/projects/reorder", requireAuth, async (req, res) => {
+  try {
+    const { reorderType, projectsOrder } = req.body; // reorderType: "featured" | "all"
+    if (!reorderType || !Array.isArray(projectsOrder)) {
+      return res.status(400).json({ error: "reorderType and projectsOrder array are required." });
+    }
+
+    const fieldToUpdate = reorderType === "featured" ? "featuredOrder" : "allOrder";
+    
+    const bulkOps = projectsOrder.map(item => ({
+      updateOne: {
+        filter: { _id: item.id },
+        update: { $set: { [fieldToUpdate]: item.order } }
+      }
+    }));
+
+    await Project.bulkWrite(bulkOps);
+    console.log(`✓ Successfully updated projects ${reorderType} order!`);
+    res.json({ success: true, message: `Projects ${reorderType} order updated successfully!` });
+  } catch (error) {
+    console.error("✗ Error updating project orders:", error.message);
     res.status(500).json({ error: "Internal Server Error", details: error.message });
   }
 });
@@ -824,6 +852,7 @@ app.post("/api/projects", requireAuth, imageUpload.single("image"), async (req, 
       return res.status(400).json({ error: "Image file is required" });
     }
 
+    const count = await Project.countDocuments();
     const imageUrl = await uploadImageToCloudinary(req.file.buffer, "projects");
     const project = await Project.create({
       title,
@@ -833,6 +862,8 @@ app.post("/api/projects", requireAuth, imageUpload.single("image"), async (req, 
       featured: featured === "true" || featured === true,
       videoLink: videoLink || "",
       liveLink: liveLink || "",
+      featuredOrder: count,
+      allOrder: count,
       image: imageUrl
     });
     res.json(project);
