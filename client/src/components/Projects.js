@@ -122,10 +122,16 @@ export default function Projects() {
                                         {project.description}
                                     </p>
                                     
-                                    {/* Tech stack indicator */}
-                                    <div className='pt-2 flex items-center gap-2'>
-                                        <div className='flex-1 h-1 bg-gradient-to-r from-purple-500/50 to-pink-500/50 rounded-full'></div>
-                                        <span className='text-xs text-purple-400 font-medium'>Project #{index + 1}</span>
+                                    {/* Tech stack tags */}
+                                    <div className='flex flex-wrap gap-1.5 pt-2'>
+                                        {project.stack && project.stack.map((tech, idx) => (
+                                            <span 
+                                                key={idx}
+                                                className="px-2.5 py-1 text-[10px] font-semibold bg-purple-500/10 border border-purple-500/25 text-purple-300 rounded-md hover:border-purple-500/40 transition-colors duration-300"
+                                            >
+                                                {tech}
+                                            </span>
+                                        ))}
                                     </div>
                                 </div>
                             </div>
