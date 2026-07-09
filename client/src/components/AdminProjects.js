@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import axiosInstance from "./axiosInstance";
-import { FaPlus, FaTrash, FaEdit, FaTimes, FaGithub, FaCheck, FaProjectDiagram } from "react-icons/fa";
+import { FaPlus, FaTrash, FaEdit, FaTimes, FaGithub, FaCheck, FaProjectDiagram, FaVideo, FaExternalLinkAlt } from "react-icons/fa";
 
 export default function AdminProjects() {
     const [projects, setProjects] = useState([]);
@@ -14,6 +14,8 @@ export default function AdminProjects() {
     const [github, setGithub] = useState("");
     const [stackInput, setStackInput] = useState("");
     const [featured, setFeatured] = useState(false);
+    const [videoLink, setVideoLink] = useState("");
+    const [liveLink, setLiveLink] = useState("");
     const [imageFile, setImageFile] = useState(null);
     const [imagePreview, setImagePreview] = useState("");
 
@@ -43,6 +45,8 @@ export default function AdminProjects() {
         setGithub("");
         setStackInput("");
         setFeatured(false);
+        setVideoLink("");
+        setLiveLink("");
         setImageFile(null);
         setImagePreview("");
         setError("");
@@ -57,6 +61,8 @@ export default function AdminProjects() {
         setGithub(project.github || "");
         setStackInput(project.stack ? project.stack.join(", ") : "");
         setFeatured(project.featured || false);
+        setVideoLink(project.videoLink || "");
+        setLiveLink(project.liveLink || "");
         setImageFile(null);
         setImagePreview(project.image || "");
         setError("");
@@ -92,6 +98,8 @@ export default function AdminProjects() {
         formData.append("title", title);
         formData.append("description", description);
         formData.append("github", github);
+        formData.append("videoLink", videoLink);
+        formData.append("liveLink", liveLink);
         
         // Parse stack tags
         const stackArr = stackInput
@@ -216,14 +224,42 @@ export default function AdminProjects() {
                             </div>
 
                             <div className="flex items-center justify-between border-t border-slate-100 pt-4">
-                                <a 
-                                    href={project.github} 
-                                    target="_blank" 
-                                    rel="noopener noreferrer"
-                                    className="text-slate-500 hover:text-slate-800 transition-colors text-xs font-semibold flex items-center gap-1.5"
-                                >
-                                    <FaGithub size={14} className="text-slate-400" /> GitHub Link
-                                </a>
+                                <div className="flex items-center gap-3">
+                                    <a 
+                                        href={project.github} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer"
+                                        className="text-slate-500 hover:text-slate-800 transition-colors text-xs font-semibold flex items-center gap-1.5"
+                                        title="GitHub Repository"
+                                    >
+                                        <FaGithub size={14} className="text-slate-400" />
+                                        <span>Git</span>
+                                    </a>
+                                    {project.liveLink && (
+                                        <a 
+                                            href={project.liveLink} 
+                                            target="_blank" 
+                                            rel="noopener noreferrer"
+                                            className="text-emerald-600 hover:text-emerald-700 transition-colors text-xs font-semibold flex items-center gap-1.5"
+                                            title="Live Demo"
+                                        >
+                                            <FaExternalLinkAlt size={11} className="text-emerald-400" />
+                                            <span>Live</span>
+                                        </a>
+                                    )}
+                                    {project.videoLink && (
+                                        <a 
+                                            href={project.videoLink} 
+                                            target="_blank" 
+                                            rel="noopener noreferrer"
+                                            className="text-rose-600 hover:text-rose-700 transition-colors text-xs font-semibold flex items-center gap-1.5"
+                                            title="Video Tour"
+                                        >
+                                            <FaVideo size={11} className="text-rose-400" />
+                                            <span>Video</span>
+                                        </a>
+                                    )}
+                                </div>
 
                                 <div className="flex items-center gap-2">
                                     <button 
@@ -302,6 +338,28 @@ export default function AdminProjects() {
                                     value={github}
                                     onChange={(e) => setGithub(e.target.value)}
                                     placeholder="https://github.com/username/project"
+                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-all shadow-inner"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">Live Demo URL (Optional)</label>
+                                <input 
+                                    type="url" 
+                                    value={liveLink}
+                                    onChange={(e) => setLiveLink(e.target.value)}
+                                    placeholder="https://myproject.com"
+                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-all shadow-inner"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">Video Tour URL (Optional)</label>
+                                <input 
+                                    type="url" 
+                                    value={videoLink}
+                                    onChange={(e) => setVideoLink(e.target.value)}
+                                    placeholder="https://youtube.com/... or loom.com/..."
                                     className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-all shadow-inner"
                                 />
                             </div>

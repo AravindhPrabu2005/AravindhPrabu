@@ -110,7 +110,9 @@ const projectSchema = new mongoose.Schema({
   description: { type: String, required: true },
   github: { type: String, required: true },
   stack: [String],
-  featured: { type: Boolean, default: false }
+  featured: { type: Boolean, default: false },
+  videoLink: { type: String, default: "" },
+  liveLink: { type: String, default: "" }
 });
 const Project = mongoose.model("Project", projectSchema);
 
@@ -817,7 +819,7 @@ app.get("/api/projects", async (req, res) => {
 // POST create project (with image upload)
 app.post("/api/projects", requireAuth, imageUpload.single("image"), async (req, res) => {
   try {
-    const { title, description, github, stack, featured } = req.body;
+    const { title, description, github, stack, featured, videoLink, liveLink } = req.body;
     if (!req.file) {
       return res.status(400).json({ error: "Image file is required" });
     }
@@ -829,6 +831,8 @@ app.post("/api/projects", requireAuth, imageUpload.single("image"), async (req, 
       github,
       stack: typeof stack === "string" ? JSON.parse(stack) : stack,
       featured: featured === "true" || featured === true,
+      videoLink: videoLink || "",
+      liveLink: liveLink || "",
       image: imageUrl
     });
     res.json(project);
@@ -841,13 +845,15 @@ app.post("/api/projects", requireAuth, imageUpload.single("image"), async (req, 
 app.put("/api/projects/:id", requireAuth, imageUpload.single("image"), async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, description, github, stack, featured } = req.body;
+    const { title, description, github, stack, featured, videoLink, liveLink } = req.body;
     const updateData = {
       title,
       description,
       github,
       stack: typeof stack === "string" ? JSON.parse(stack) : stack,
-      featured: featured === "true" || featured === true
+      featured: featured === "true" || featured === true,
+      videoLink: videoLink || "",
+      liveLink: liveLink || ""
     };
 
     if (req.file) {
