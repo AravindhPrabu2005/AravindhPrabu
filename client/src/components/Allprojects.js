@@ -3,6 +3,15 @@ import axiosInstance from './axiosInstance';
 
 const Allprojects = () => {
   const [projects, setProjects] = useState([]);
+  const [modalImage, setModalImage] = useState(null);
+
+  const openModal = (image) => {
+    setModalImage(image);
+  };
+
+  const closeModal = () => {
+    setModalImage(null);
+  };
 
   useEffect(() => {
     axiosInstance.get("/api/projects")
@@ -40,12 +49,26 @@ const Allprojects = () => {
             
             <div className="relative">
               {/* Image Container */}
-              <div className="relative h-48 overflow-hidden bg-slate-950 flex items-center justify-center">
+              <div 
+                className="relative h-48 overflow-hidden bg-slate-950 flex items-center justify-center cursor-zoom-in"
+                onClick={() => openModal(project.image)}
+                title="Click to view full image"
+              >
                 <img 
                   src={project.image} 
                   alt={project.title} 
-                  className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
+                  className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
                 />
+                
+                {/* Subtle Hover Zoom Overlay */}
+                <div className="absolute inset-0 bg-slate-950/40 opacity-0 hover:opacity-100 transition-opacity duration-300 flex items-center justify-center z-10">
+                  <span className="p-2.5 bg-slate-900/80 border border-white/10 rounded-full text-white backdrop-blur-xs flex items-center justify-center hover:scale-110 active:scale-95 transition-all shadow-lg">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" />
+                    </svg>
+                  </span>
+                </div>
+
                 {/* Indicator Badges (Top-Right) */}
                 <div className="absolute top-3 right-3 flex items-center gap-1.5 z-30">
                   {project.liveLink && (
@@ -142,6 +165,34 @@ const Allprojects = () => {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
           </svg>
           <p className="text-gray-400 text-lg">Projects coming soon...</p>
+        </div>
+      )}
+      {/* Image Modal Lightbox */}
+      {modalImage && (
+        <div 
+          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 cursor-zoom-out"
+          onClick={closeModal}
+        >
+          <button
+            onClick={closeModal}
+            className="absolute top-4 right-4 p-3 bg-white/10 hover:bg-white/20 rounded-full transition-all duration-300 hover:scale-110 z-10 cursor-pointer"
+            aria-label="Close modal"
+          >
+            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+
+          <div 
+            className="relative max-w-5xl max-h-[90vh] w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img 
+              src={modalImage} 
+              alt="Project" 
+              className="w-full h-full object-contain rounded-lg shadow-2xl"
+            />
+          </div>
         </div>
       )}
     </div>

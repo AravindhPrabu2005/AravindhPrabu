@@ -830,7 +830,7 @@ app.put("/api/projects/reorder", requireAuth, async (req, res) => {
     
     const bulkOps = projectsOrder.map(item => ({
       updateOne: {
-        filter: { _id: item.id },
+        filter: { _id: new mongoose.Types.ObjectId(item.id) },
         update: { $set: { [fieldToUpdate]: item.order } }
       }
     }));
