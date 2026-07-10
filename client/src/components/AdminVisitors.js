@@ -50,8 +50,16 @@ export default function AdminVisitors() {
     };
 
     const formatTimestamp = (isoString) => {
-        const date = new Date(isoString);
-        return date.toLocaleString();
+        if (!isoString) return "N/A";
+        try {
+            const date = new Date(isoString);
+            return date.toLocaleString("en-IN", {
+                timeZone: "Asia/Kolkata",
+                hour12: true
+            });
+        } catch (e) {
+            return isoString;
+        }
     };
 
     const cleanVisitorTime = (timeStr) => {
@@ -146,7 +154,7 @@ export default function AdminVisitors() {
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                      <div className="flex flex-col gap-1 text-slate-600">
                                                          <div className="flex items-center gap-1.5">
-                                                             <span className="text-[9px] uppercase font-bold text-indigo-500 px-1 bg-indigo-50 border border-indigo-100 rounded">My Time:</span>
+                                                             <span className="text-[9px] uppercase font-bold text-indigo-500 px-1 bg-indigo-50 border border-indigo-100 rounded">My Time (IST):</span>
                                                              <span className="font-semibold text-xs text-slate-700">
                                                                  {formatTimestamp(visitor.visitedAt)}
                                                              </span>
@@ -253,7 +261,7 @@ export default function AdminVisitors() {
                                 <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Session Timestamps</h4>
                                 <div className="bg-slate-50 rounded-xl p-4 border border-slate-200/60 space-y-3">
                                     <div className="flex items-center justify-between">
-                                        <span className="text-xs text-slate-500 font-medium">My Log Time (Server)</span>
+                                        <span className="text-xs text-slate-500 font-medium">My Time (IST)</span>
                                         <span className="text-xs font-semibold text-slate-800">
                                             {formatTimestamp(selectedVisitor.visitedAt)}
                                         </span>
