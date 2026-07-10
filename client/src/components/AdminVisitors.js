@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import axiosInstance from "./axiosInstance";
-import { FaTrash, FaTrashAlt, FaGlobe, FaLaptop, FaNetworkWired, FaEye, FaTimes, FaCopy } from "react-icons/fa";
+import { FaTrash, FaGlobe, FaLaptop, FaNetworkWired, FaEye, FaTimes, FaCopy } from "react-icons/fa";
 
 export default function AdminVisitors() {
     const [visitors, setVisitors] = useState([]);
@@ -37,7 +37,7 @@ export default function AdminVisitors() {
         }
     };
 
-    const handleClearAll = async () => {
+    /* const handleClearAll = async () => {
         if (window.confirm("WARNING: Are you sure you want to delete ALL visitor logs? This action cannot be undone.")) {
             try {
                 await axiosInstance.delete("/api/visitors");
@@ -47,7 +47,7 @@ export default function AdminVisitors() {
                 console.error("Error clearing visitor logs:", error);
             }
         }
-    };
+    }; */
 
     const formatTimestamp = (isoString) => {
         if (!isoString) return "N/A";
@@ -130,7 +130,7 @@ export default function AdminVisitors() {
                                 <p className="text-xs text-slate-500">Logged session visits: {visitors.length}</p>
                             </div>
                         </div>
-                        {visitors.length > 0 && (
+                        {/* {visitors.length > 0 && (
                             <button
                                 onClick={handleClearAll}
                                 className="flex items-center justify-center gap-2 px-4 py-2.5 bg-red-50 hover:bg-red-100 text-red-650 hover:text-red-700 border border-red-100 rounded-xl text-xs font-semibold transition-all duration-300 active:scale-95 cursor-pointer"
@@ -138,7 +138,7 @@ export default function AdminVisitors() {
                                 <FaTrashAlt />
                                 <span>Clear All Logs</span>
                             </button>
-                        )}
+                        )} */}
                     </div>
 
                     {visitors.length === 0 ? (
