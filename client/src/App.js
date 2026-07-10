@@ -96,6 +96,7 @@ function LayoutWrapper() {
               language: navigator.language,
               path: window.location.pathname,
               timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "Unknown",
+              visitorTime: new Date().toString(),
               geoData // Send geolocation retrieved from client-side
             });
             sessionStorage.setItem("portfolio_visited", "true");

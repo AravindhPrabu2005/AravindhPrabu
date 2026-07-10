@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import axiosInstance from "./axiosInstance";
-import { FaTrash, FaTrashAlt, FaGlobe, FaLaptop, FaCalendarAlt, FaNetworkWired, FaEye, FaTimes, FaCopy } from "react-icons/fa";
+import { FaTrash, FaTrashAlt, FaGlobe, FaLaptop, FaNetworkWired, FaEye, FaTimes, FaCopy } from "react-icons/fa";
 
 export default function AdminVisitors() {
     const [visitors, setVisitors] = useState([]);
@@ -52,6 +52,11 @@ export default function AdminVisitors() {
     const formatTimestamp = (isoString) => {
         const date = new Date(isoString);
         return date.toLocaleString();
+    };
+
+    const cleanVisitorTime = (timeStr) => {
+        if (!timeStr) return "Unknown";
+        return timeStr.replace(/\s\([^)]+\)$/, "");
     };
 
     // Helper to extract device info from User Agent
@@ -139,13 +144,28 @@ export default function AdminVisitors() {
                                             <tr key={visitor._id} className="hover:bg-slate-50/40 transition-colors duration-200">
                                                 {/* Date & Time */}
                                                 <td className="px-6 py-4 whitespace-nowrap">
-                                                    <div className="flex items-center gap-2 text-slate-600">
-                                                        <FaCalendarAlt className="text-slate-400" size={12} />
-                                                        <span className="font-medium text-xs">
-                                                            {formatTimestamp(visitor.visitedAt)}
-                                                        </span>
-                                                    </div>
-                                                </td>
+                                                     <div className="flex flex-col gap-1 text-slate-600">
+                                                         <div className="flex items-center gap-1.5">
+                                                             <span className="text-[9px] uppercase font-bold text-indigo-500 px-1 bg-indigo-50 border border-indigo-100 rounded">My Time:</span>
+                                                             <span className="font-semibold text-xs text-slate-700">
+                                                                 {formatTimestamp(visitor.visitedAt)}
+                                                             </span>
+                                                         </div>
+                                                         {visitor.visitorTime ? (
+                                                             <div className="flex items-center gap-1.5">
+                                                                 <span className="text-[9px] uppercase font-bold text-emerald-500 px-1 bg-emerald-50 border border-emerald-100 rounded">Visitor:</span>
+                                                                 <span className="font-medium text-[11px] text-slate-500 truncate max-w-[220px]" title={visitor.visitorTime}>
+                                                                     {cleanVisitorTime(visitor.visitorTime)}
+                                                                 </span>
+                                                             </div>
+                                                         ) : (
+                                                             <div className="flex items-center gap-1.5 opacity-60">
+                                                                 <span className="text-[9px] uppercase font-bold text-slate-400 px-1 bg-slate-50 border border-slate-200 rounded">Visitor:</span>
+                                                                 <span className="font-medium text-[10px] text-slate-400">N/A</span>
+                                                             </div>
+                                                         )}
+                                                     </div>
+                                                 </td>
 
                                                 {/* Location & ISP */}
                                                 <td className="px-6 py-4">
@@ -228,6 +248,25 @@ export default function AdminVisitors() {
 
                         {/* Body */}
                         <div className="p-6 overflow-y-auto space-y-5 max-h-[75vh]">
+                            {/* Section: Visit Timestamps */}
+                            <div className="space-y-3">
+                                <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Session Timestamps</h4>
+                                <div className="bg-slate-50 rounded-xl p-4 border border-slate-200/60 space-y-3">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-xs text-slate-500 font-medium">My Log Time (Server)</span>
+                                        <span className="text-xs font-semibold text-slate-800">
+                                            {formatTimestamp(selectedVisitor.visitedAt)}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-xs text-slate-500 font-medium">Visitor Time (Browser)</span>
+                                        <span className="text-xs font-semibold text-emerald-650" title={selectedVisitor.visitorTime}>
+                                            {selectedVisitor.visitorTime ? cleanVisitorTime(selectedVisitor.visitorTime) : "N/A (Old Log)"}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
                             {/* Section: IP & Location */}
                             <div className="space-y-3">
                                 <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Network & Location</h4>

@@ -1158,6 +1158,7 @@ const visitorSchema = new mongoose.Schema({
   language: String,
   path: String,
   timezone: String,
+  visitorTime: String,
   visitedAt: { type: Date, default: Date.now }
 });
 
@@ -1166,7 +1167,7 @@ const Visitor = mongoose.model("Visitor", visitorSchema);
 // POST visitor details (silent tracker)
 app.post("/api/visit", async (req, res) => {
   try {
-    const { userAgent, referrer, screenResolution, language, path, timezone, geoData } = req.body;
+    const { userAgent, referrer, screenResolution, language, path, timezone, visitorTime, geoData } = req.body;
     
     // Extract IP and location details from the client-side payload
     let ip = geoData?.ip || "Unknown";
@@ -1233,7 +1234,8 @@ app.post("/api/visit", async (req, res) => {
       screenResolution,
       language,
       path,
-      timezone
+      timezone,
+      visitorTime
     });
 
     console.log(`[Visitor] New visit recorded: IP ${ip} (${city}, ${country})`);
