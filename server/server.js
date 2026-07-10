@@ -154,10 +154,6 @@ const initSettings = async () => {
         resumeUrl: "/public/Aravindh Prabu Resume.pdf"
       });
       console.log("✓ Default AdminSettings created");
-    } else if (settings.resumeUrl && settings.resumeUrl.includes("cloudinary")) {
-      settings.resumeUrl = "/public/Aravindh Prabu Resume.pdf";
-      await settings.save();
-      console.log("✓ Reset Cloudinary URL to local path in DB settings");
     }
   } catch (err) {
     console.error("✗ Failed to initialize settings:", err);
@@ -525,9 +521,19 @@ Please feel free to reach out if you have any questions or would like to connect
 
 Best regards,  
 Aravindh Prabu`;
-      const resumePath = path.join(__dirname, "public", "Aravindh Prabu Resume.pdf");
-      console.log("Reading local resume file path:", resumePath);
-      const resumeBuffer = fs.readFileSync(resumePath);
+      let resumeBuffer;
+      if (settings && settings.resumeUrl && (settings.resumeUrl.startsWith("http") || settings.resumeUrl.includes("cloudinary"))) {
+        console.log("Fetching resume file from Cloudinary URL:", settings.resumeUrl);
+        const response = await axios.get(settings.resumeUrl, { responseType: "arraybuffer" });
+        resumeBuffer = Buffer.from(response.data);
+      } else {
+        const resumePath = path.join(__dirname, "public", "Aravindh Prabu Resume.pdf");
+        console.log("Reading local resume file path:", resumePath);
+        if (!fs.existsSync(resumePath)) {
+          throw new Error("Local resume file not found at: " + resumePath);
+        }
+        resumeBuffer = fs.readFileSync(resumePath);
+      }
       const resumeBase64 = resumeBuffer.toString("base64");
 
       console.log("Attempting to send resume email with attachment via Resend...");
@@ -668,19 +674,9 @@ app.delete("/api/resume-emails", requireAuth, async (req, res) => {
     res.status(500).json({ error: "Internal Server Error", details: error.message });
   }
 });
-// Configure Cloudinary
-// Configure Multer storage locally
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, "public"));
-  },
-  filename: (req, file, cb) => {
-    cb(null, "Aravindh Prabu Resume.pdf");
-  }
-});
-
-const upload = multer({
-  storage,
+// Configure Multer memory storage for resume
+const resumeUpload = multer({
+  storage: multer.memoryStorage(),
   fileFilter: (req, file, cb) => {
     if (file.mimetype === "application/pdf") {
       cb(null, true);
@@ -715,14 +711,16 @@ app.put("/api/settings/cover-letter", requireAuth, async (req, res) => {
   }
 });
 
-// POST Resume PDF upload locally
-app.post("/api/settings/resume", requireAuth, upload.single("resume"), async (req, res) => {
+// POST Resume PDF upload to Cloudinary
+app.post("/api/settings/resume", requireAuth, resumeUpload.single("resume"), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: "No PDF file provided" });
     }
 
-    const resumeUrl = "/public/Aravindh Prabu Resume.pdf";
+    console.log("Uploading resume PDF to Cloudinary...");
+    const resumeUrl = await uploadFileToCloudinary(req.file.buffer, "resume", "raw");
+    console.log("✓ Uploaded successfully. Cloudinary URL:", resumeUrl);
 
     // Save in settings
     const settings = await AdminSettings.findOneAndUpdate(
@@ -733,14 +731,14 @@ app.post("/api/settings/resume", requireAuth, upload.single("resume"), async (re
 
     res.json({ success: true, resumeUrl, settings });
   } catch (error) {
-    console.error("Local file write failed:", error);
-    res.status(500).json({ error: "Local file write failed", details: error.message });
+    console.error("Cloudinary resume upload failed:", error);
+    res.status(500).json({ error: "Cloudinary resume upload failed", details: error.message });
   }
 });
 
 
 // GET Secure Resume PDF view
-app.get("/api/settings/resume/view", (req, res) => {
+app.get("/api/settings/resume/view", async (req, res) => {
   try {
     const { token } = req.query;
     if (!token) {
@@ -753,14 +751,22 @@ app.get("/api/settings/resume/view", (req, res) => {
       return res.status(401).send("Unauthorized: Invalid or expired token");
     }
 
-    const resumePath = path.join(__dirname, "public", "Aravindh Prabu Resume.pdf");
-    if (!fs.existsSync(resumePath)) {
-      return res.status(404).send("Resume file not found");
+    const settings = await AdminSettings.findOne({ key: "admin_settings" });
+    if (settings && settings.resumeUrl && (settings.resumeUrl.startsWith("http") || settings.resumeUrl.includes("cloudinary"))) {
+      console.log("Serving secure resume preview from Cloudinary URL:", settings.resumeUrl);
+      const response = await axios.get(settings.resumeUrl, { responseType: "stream" });
+      res.setHeader("Content-Type", "application/pdf");
+      response.data.pipe(res);
+    } else {
+      const resumePath = path.join(__dirname, "public", "Aravindh Prabu Resume.pdf");
+      if (!fs.existsSync(resumePath)) {
+        return res.status(404).send("Resume file not found");
+      }
+      res.setHeader("Content-Type", "application/pdf");
+      res.sendFile(resumePath);
     }
-
-    res.setHeader("Content-Type", "application/pdf");
-    res.sendFile(resumePath);
   } catch (error) {
+    console.error("Error loading secure resume file:", error);
     res.status(500).send("Error loading resume file");
   }
 });
@@ -792,6 +798,24 @@ const uploadImageToCloudinary = (fileBuffer, folder = "portfolio") => {
     const stream = cloudinary.uploader.upload_stream(
       {
         resource_type: "image",
+        folder: folder,
+        overwrite: true
+      },
+      (error, result) => {
+        if (error) reject(error);
+        else resolve(result.secure_url);
+      }
+    );
+    stream.end(fileBuffer);
+  });
+};
+
+// Cloudinary file upload helper (for PDFs/documents)
+const uploadFileToCloudinary = (fileBuffer, folder = "portfolio", resourceType = "auto") => {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      {
+        resource_type: resourceType,
         folder: folder,
         overwrite: true
       },
