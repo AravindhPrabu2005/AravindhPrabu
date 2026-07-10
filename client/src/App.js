@@ -36,9 +36,28 @@ function LayoutWrapper() {
     // Only track visitors on the production domain (not localhost/127.0.0.1)
     const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     if (!isLocal) {
-      if (!sessionStorage.getItem("portfolio_visited")) {
-        const reportVisit = async () => {
-          let geoData = {
+      // Get or create unique session ID
+      let sessionId = sessionStorage.getItem("portfolio_session_id");
+      if (!sessionId) {
+        sessionId = "sess_" + Math.random().toString(36).substring(2, 15) + "_" + Date.now();
+        sessionStorage.setItem("portfolio_session_id", sessionId);
+      }
+
+      const reportVisit = async () => {
+        let geoData = null;
+        const cachedGeo = sessionStorage.getItem("portfolio_geodata");
+        
+        if (cachedGeo) {
+          try {
+            geoData = JSON.parse(cachedGeo);
+          } catch (e) {
+            geoData = null;
+          }
+        }
+
+        // If we don't have geoData yet, query it once per session
+        if (!geoData) {
+          geoData = {
             ip: "Unknown",
             country: "Unknown",
             city: "Unknown",
@@ -64,6 +83,7 @@ function LayoutWrapper() {
                 latitude: data.latitude || null,
                 longitude: data.longitude || null
               };
+              sessionStorage.setItem("portfolio_geodata", JSON.stringify(geoData));
             }
           } catch (err) {
             console.error("Primary client-side geolocation failed, attempting fallback...", err);
@@ -82,32 +102,34 @@ function LayoutWrapper() {
                   latitude: data.latitude || null,
                   longitude: data.longitude || null
                 };
+                sessionStorage.setItem("portfolio_geodata", JSON.stringify(geoData));
               }
             } catch (fallbackErr) {
               console.error("Fallback geolocation failed:", fallbackErr);
             }
           }
+        }
 
-          try {
-            await axiosInstance.post("/api/visit", {
-              userAgent: navigator.userAgent,
-              referrer: document.referrer || "Direct",
-              screenResolution: `${window.screen.width}x${window.screen.height}`,
-              language: navigator.language,
-              path: window.location.pathname,
-              timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "Unknown",
-              visitorTime: new Date().toString(),
-              geoData // Send geolocation retrieved from client-side
-            });
-            sessionStorage.setItem("portfolio_visited", "true");
-          } catch (err) {
-            console.error("Failed to log visit:", err);
-          }
-        };
-        reportVisit();
-      }
+        try {
+          await axiosInstance.post("/api/visit", {
+            sessionId,
+            userAgent: navigator.userAgent,
+            referrer: document.referrer || "Direct",
+            screenResolution: `${window.screen.width}x${window.screen.height}`,
+            language: navigator.language,
+            path: location.pathname,
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "Unknown",
+            visitorTime: new Date().toString(),
+            geoData
+          });
+        } catch (err) {
+          console.error("Failed to log visit:", err);
+        }
+      };
+      
+      reportVisit();
     }
-  }, []);
+  }, [location.pathname]);
   const hideHeaderFooter =
     location.pathname === "/allprojects" ||
     location.pathname === "/achivements" ||

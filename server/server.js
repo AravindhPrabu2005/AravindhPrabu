@@ -1144,6 +1144,7 @@ app.delete("/api/experiences/:id", requireAuth, async (req, res) => {
 // ==========================================
 
 const visitorSchema = new mongoose.Schema({
+  sessionId: { type: String, index: true },
   ip: String,
   country: String,
   city: String,
@@ -1159,7 +1160,13 @@ const visitorSchema = new mongoose.Schema({
   path: String,
   timezone: String,
   visitorTime: String,
-  visitedAt: { type: Date, default: Date.now }
+  visitedAt: { type: Date, default: Date.now },
+  pageViews: [
+    {
+      path: String,
+      visitedAt: { type: Date, default: Date.now }
+    }
+  ]
 });
 
 const Visitor = mongoose.model("Visitor", visitorSchema);
@@ -1167,7 +1174,23 @@ const Visitor = mongoose.model("Visitor", visitorSchema);
 // POST visitor details (silent tracker)
 app.post("/api/visit", async (req, res) => {
   try {
-    const { userAgent, referrer, screenResolution, language, path, timezone, visitorTime, geoData } = req.body;
+    const { userAgent, referrer, screenResolution, language, path, timezone, visitorTime, sessionId, geoData } = req.body;
+
+    // Check if session already exists
+    if (sessionId) {
+      const existingVisitor = await Visitor.findOne({ sessionId });
+      if (existingVisitor) {
+        // Push the new page view
+        existingVisitor.pageViews.push({ path, visitedAt: new Date() });
+        existingVisitor.visitedAt = new Date();
+        if (visitorTime) {
+          existingVisitor.visitorTime = visitorTime;
+        }
+        await existingVisitor.save();
+        console.log(`[Visitor] Session page view logged: ${path} (Session: ${sessionId})`);
+        return res.status(200).json({ success: true, message: "Page view recorded" });
+      }
+    }
     
     // Extract IP and location details from the client-side payload
     let ip = geoData?.ip || "Unknown";
@@ -1221,6 +1244,7 @@ app.post("/api/visit", async (req, res) => {
     }
 
     const visitor = await Visitor.create({
+      sessionId,
       ip,
       country,
       city,
@@ -1235,7 +1259,8 @@ app.post("/api/visit", async (req, res) => {
       language,
       path,
       timezone,
-      visitorTime
+      visitorTime,
+      pageViews: [{ path, visitedAt: new Date() }]
     });
 
     console.log(`[Visitor] New visit recorded: IP ${ip} (${city}, ${country})`);

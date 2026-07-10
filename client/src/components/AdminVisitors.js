@@ -67,6 +67,18 @@ export default function AdminVisitors() {
         return timeStr.replace(/\s\([^)]+\)$/, "");
     };
 
+    const getPageCounts = (pageViews) => {
+        if (!pageViews || !Array.isArray(pageViews) || pageViews.length === 0) {
+            return [];
+        }
+        const counts = {};
+        pageViews.forEach(pv => {
+            const p = pv.path || "/";
+            counts[p] = (counts[p] || 0) + 1;
+        });
+        return Object.entries(counts).map(([path, count]) => ({ path, count }));
+    };
+
     // Helper to extract device info from User Agent
     const getDeviceDescription = (ua) => {
         if (!ua) return "Unknown Device";
@@ -384,13 +396,66 @@ export default function AdminVisitors() {
                                         </span>
                                     </div>
                                     <div className="flex items-center justify-between">
-                                        <span className="text-xs text-slate-500 font-medium">Page Visited</span>
-                                        <code className="text-xs font-mono text-indigo-650 font-bold">
+                                        <span className="text-xs text-slate-500 font-medium">Entry Page</span>
+                                        <code className="text-xs font-mono text-slate-850 font-bold">
                                             {selectedVisitor.path || "/"}
                                         </code>
                                     </div>
                                 </div>
                             </div>
+
+                            {/* Section: Dynamic Page Navigation Summary */}
+                            <div className="space-y-3">
+                                <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Pages Visited & Counts</h4>
+                                <div className="bg-slate-50 rounded-xl p-4 border border-slate-200/60 space-y-2.5">
+                                    {getPageCounts(selectedVisitor.pageViews).length > 0 ? (
+                                        getPageCounts(selectedVisitor.pageViews).map((pv, idx) => (
+                                            <div key={idx} className="flex items-center justify-between text-xs">
+                                                <code className="font-mono text-indigo-650 font-bold bg-indigo-50 border border-indigo-100/50 px-2 py-0.5 rounded">
+                                                    {pv.path}
+                                                </code>
+                                                <span className="font-bold text-slate-700 bg-white border border-slate-200 px-2 py-0.5 rounded-full shadow-2xs">
+                                                    {pv.count} {pv.count === 1 ? "view" : "views"}
+                                                </span>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="flex items-center justify-between text-xs">
+                                            <code className="font-mono text-indigo-650 font-bold bg-indigo-50 border border-indigo-100/50 px-2 py-0.5 rounded">
+                                                {selectedVisitor.path || "/"}
+                                            </code>
+                                            <span className="font-bold text-slate-700 bg-white border border-slate-200 px-2 py-0.5 rounded-full shadow-2xs">
+                                                1 view (Legacy Log)
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Section: User Navigation Journey Flow */}
+                            {selectedVisitor.pageViews && selectedVisitor.pageViews.length > 1 && (
+                                <div className="space-y-3">
+                                    <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Navigation Journey ({selectedVisitor.pageViews.length} steps)</h4>
+                                    <div className="bg-slate-50 rounded-xl p-4 border border-slate-200/60 max-h-[160px] overflow-y-auto">
+                                        <div className="relative border-l-2 border-slate-200 pl-4 space-y-4 ml-1.5 py-1">
+                                            {selectedVisitor.pageViews.map((pv, idx) => (
+                                                <div key={idx} className="relative text-xs">
+                                                    {/* Dot */}
+                                                    <span className="absolute -left-[21.5px] top-1.5 w-2 h-2 rounded-full bg-indigo-500 border border-white"></span>
+                                                    <div className="flex flex-col gap-0.5">
+                                                        <span className="font-mono font-bold text-slate-800 truncate max-w-[280px]">
+                                                            {pv.path || "/"}
+                                                        </span>
+                                                        <span className="text-[10px] text-slate-400 font-medium">
+                                                            {formatTimestamp(pv.visitedAt)}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Section: User Agent */}
                             <div className="space-y-3">
