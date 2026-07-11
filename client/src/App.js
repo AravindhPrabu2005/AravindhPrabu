@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import { Analytics } from "@vercel/analytics/react";
@@ -31,6 +31,10 @@ import AdminVisitors from "./components/AdminVisitors";
 
 function LayoutWrapper() {
   const location = useLocation();
+  const sessionActiveRef = useRef(false);
+  const prevPathRef = useRef(location.pathname);
+  const pageLoadTimeRef = useRef(Date.now());
+  const maxScrollDepthRef = useRef(0);
 
   useEffect(() => {
     // Only track visitors on the production domain (not localhost/127.0.0.1)
@@ -43,6 +47,27 @@ function LayoutWrapper() {
         sessionStorage.setItem("portfolio_session_id", sessionId);
       }
 
+      // Handle page transitions & duration updates
+      if (sessionActiveRef.current) {
+        const duration = Math.round((Date.now() - pageLoadTimeRef.current) / 1000);
+        axiosInstance.post("/api/visit/event", {
+          sessionId,
+          eventType: "pageview",
+          data: {
+            path: prevPathRef.current,
+            duration,
+            maxScrollDepth: maxScrollDepthRef.current
+          }
+        }).catch(err => console.error("Failed to log page transition:", err));
+      }
+
+      // Update refs for new page load
+      prevPathRef.current = location.pathname;
+      pageLoadTimeRef.current = Date.now();
+      maxScrollDepthRef.current = 0;
+      sessionActiveRef.current = true;
+
+      // Geolocation reporting
       const reportVisit = async () => {
         let geoData = null;
         const cachedGeo = sessionStorage.getItem("portfolio_geodata");
@@ -84,9 +109,11 @@ function LayoutWrapper() {
                 longitude: data.longitude || null
               };
               sessionStorage.setItem("portfolio_geodata", JSON.stringify(geoData));
+            } else {
+              throw new Error("ipapi not ok");
             }
           } catch (err) {
-            console.error("Primary client-side geolocation failed, attempting fallback...", err);
+            console.error("Primary client-side geolocation failed, attempting fallback 1...", err);
             // 2. Try fallback geolocation service (freeipapi.com)
             try {
               const response = await fetch("https://freeipapi.com/api/json");
@@ -103,12 +130,86 @@ function LayoutWrapper() {
                   longitude: data.longitude || null
                 };
                 sessionStorage.setItem("portfolio_geodata", JSON.stringify(geoData));
+              } else {
+                throw new Error("freeipapi not ok");
               }
             } catch (fallbackErr) {
-              console.error("Fallback geolocation failed:", fallbackErr);
+              console.error("Fallback 1 geolocation failed, attempting fallback 2 (ipwho.is)...", fallbackErr);
+              // 3. Try ipwho.is as third fallback
+              try {
+                const response = await fetch("https://ipwho.is/");
+                if (response.ok) {
+                  const data = await response.json();
+                  if (data.success) {
+                    geoData = {
+                      ip: data.ip || "Unknown",
+                      country: data.country || "Unknown",
+                      city: data.city || "Unknown",
+                      region: data.region || "Unknown",
+                      isp: data.connection?.isp || "Unknown",
+                      org: data.connection?.org || "Unknown",
+                      latitude: data.latitude || null,
+                      longitude: data.longitude || null
+                    };
+                    sessionStorage.setItem("portfolio_geodata", JSON.stringify(geoData));
+                  }
+                }
+              } catch (fallbackErr2) {
+                console.error("Fallback 2 geolocation failed:", fallbackErr2);
+              }
             }
           }
         }
+
+        // Telemetry Feature Detections
+        const cookieSupport = navigator.cookieEnabled;
+        const touchSupport = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+        
+        let visitorType = "New";
+        try {
+          if (localStorage.getItem("portfolio_returning_visitor")) {
+            visitorType = "Returning";
+          } else {
+            localStorage.setItem("portfolio_returning_visitor", "true");
+          }
+        } catch (e) {}
+
+        let utmParams = { source: "", medium: "", campaign: "", term: "", content: "" };
+        try {
+          const cachedUtm = sessionStorage.getItem("portfolio_utm_params");
+          if (cachedUtm) {
+            utmParams = JSON.parse(cachedUtm);
+          } else {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get("utm_source") || urlParams.get("utm_medium") || urlParams.get("utm_campaign")) {
+              utmParams = {
+                source: urlParams.get("utm_source") || "",
+                medium: urlParams.get("utm_medium") || "",
+                campaign: urlParams.get("utm_campaign") || "",
+                term: urlParams.get("utm_term") || "",
+                content: urlParams.get("utm_content") || ""
+              };
+              sessionStorage.setItem("portfolio_utm_params", JSON.stringify(utmParams));
+            }
+          }
+        } catch (e) {}
+
+        let networkType = "Unknown";
+        const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+        if (conn) {
+          networkType = `${conn.effectiveType || "unknown"} (downlink: ${conn.downlink || 0}Mbps, rtt: ${conn.rtt || 0}ms)`;
+        }
+
+        const browserVendor = navigator.vendor || "Unknown";
+        const platform = navigator.platform || "Unknown";
+
+        let renderingEngine = "Unknown";
+        const ua = navigator.userAgent;
+        if (ua.indexOf("Edge") > -1 || ua.indexOf("Edg") > -1) renderingEngine = "Blink (Edge)";
+        else if (ua.indexOf("Chrome") > -1) renderingEngine = "Blink (Chrome)";
+        else if (ua.indexOf("Safari") > -1 && ua.indexOf("Chrome") === -1) renderingEngine = "WebKit";
+        else if (ua.indexOf("Firefox") > -1) renderingEngine = "Gecko";
+        else if (ua.indexOf("Trident") > -1 || ua.indexOf("MSIE") > -1) renderingEngine = "Trident (IE)";
 
         try {
           await axiosInstance.post("/api/visit", {
@@ -120,7 +221,15 @@ function LayoutWrapper() {
             path: location.pathname,
             timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "Unknown",
             visitorTime: new Date().toString(),
-            geoData
+            geoData,
+            cookieSupport,
+            touchSupport,
+            visitorType,
+            utmParams,
+            networkType,
+            browserVendor,
+            renderingEngine,
+            platform
           });
         } catch (err) {
           console.error("Failed to log visit:", err);
@@ -128,6 +237,63 @@ function LayoutWrapper() {
       };
       
       reportVisit();
+
+      // Scroll event tracker
+      const handleScroll = () => {
+        const scrollTop = window.scrollY || document.documentElement.scrollTop;
+        const scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+        if (scrollHeight > 0) {
+          const pct = Math.round((scrollTop / scrollHeight) * 100);
+          if (pct > maxScrollDepthRef.current) {
+            maxScrollDepthRef.current = Math.min(pct, 100);
+          }
+        }
+      };
+      window.addEventListener("scroll", handleScroll);
+
+      // Outbound Click event tracker
+      const handleGlobalClick = (e) => {
+        const target = e.target.closest("a, button");
+        if (!target) return;
+
+        let elementId = target.id || target.getAttribute("name") || "";
+        let label = target.innerText.trim() || target.getAttribute("aria-label") || "";
+        const href = target.getAttribute("href") || "";
+
+        if (href.includes("github.com")) {
+          elementId = elementId || "github_link";
+          label = label || "GitHub Link";
+        } else if (href.includes("linkedin.com")) {
+          elementId = elementId || "linkedin_link";
+          label = label || "LinkedIn Link";
+        } else if (href.includes("leetcode.com")) {
+          elementId = elementId || "leetcode_link";
+          label = label || "LeetCode Link";
+        } else if (href.includes("Resume") || target.innerText.toLowerCase().includes("resume")) {
+          elementId = elementId || "resume_link";
+          label = label || "Resume Download/Request";
+        } else if (target.type === "submit" && target.closest("form")) {
+          elementId = elementId || "submit_button";
+          label = label || "Form Submit Button";
+        }
+
+        if (elementId || label) {
+          axiosInstance.post("/api/visit/event", {
+            sessionId,
+            eventType: "click",
+            data: {
+              elementId: elementId || "generic_click",
+              label: label || target.tagName
+            }
+          }).catch(err => console.error("Failed to log click event:", err));
+        }
+      };
+      document.addEventListener("click", handleGlobalClick);
+
+      return () => {
+        window.removeEventListener("scroll", handleScroll);
+        document.removeEventListener("click", handleGlobalClick);
+      };
     }
   }, [location.pathname]);
   const hideHeaderFooter =

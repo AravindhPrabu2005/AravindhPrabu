@@ -1161,10 +1161,33 @@ const visitorSchema = new mongoose.Schema({
   timezone: String,
   visitorTime: String,
   visitedAt: { type: Date, default: Date.now },
+  cookieSupport: Boolean,
+  touchSupport: Boolean,
+  maxScrollDepth: { type: Number, default: 0 },
+  visitorType: String,
+  utmParams: {
+    source: String,
+    medium: String,
+    campaign: String,
+    term: String,
+    content: String
+  },
+  networkType: String,
+  browserVendor: String,
+  renderingEngine: String,
+  platform: String,
   pageViews: [
     {
       path: String,
-      visitedAt: { type: Date, default: Date.now }
+      visitedAt: { type: Date, default: Date.now },
+      duration: { type: Number, default: 0 } // in seconds
+    }
+  ],
+  clicks: [
+    {
+      elementId: String,
+      label: String,
+      clickedAt: { type: Date, default: Date.now }
     }
   ]
 });
@@ -1174,14 +1197,17 @@ const Visitor = mongoose.model("Visitor", visitorSchema);
 // POST visitor details (silent tracker)
 app.post("/api/visit", async (req, res) => {
   try {
-    const { userAgent, referrer, screenResolution, language, path, timezone, visitorTime, sessionId, geoData } = req.body;
+    const { 
+      userAgent, referrer, screenResolution, language, path, timezone, visitorTime, sessionId, geoData,
+      cookieSupport, touchSupport, visitorType, utmParams, networkType, browserVendor, renderingEngine, platform
+    } = req.body;
 
     // Check if session already exists
     if (sessionId) {
       const existingVisitor = await Visitor.findOne({ sessionId });
       if (existingVisitor) {
         // Push the new page view
-        existingVisitor.pageViews.push({ path, visitedAt: new Date() });
+        existingVisitor.pageViews.push({ path, visitedAt: new Date(), duration: 0 });
         existingVisitor.visitedAt = new Date();
         if (visitorTime) {
           existingVisitor.visitorTime = visitorTime;
@@ -1260,7 +1286,15 @@ app.post("/api/visit", async (req, res) => {
       path,
       timezone,
       visitorTime,
-      pageViews: [{ path, visitedAt: new Date() }]
+      cookieSupport,
+      touchSupport,
+      visitorType,
+      utmParams,
+      networkType,
+      browserVendor,
+      renderingEngine,
+      platform,
+      pageViews: [{ path, visitedAt: new Date(), duration: 0 }]
     });
 
     console.log(`[Visitor] New visit recorded: IP ${ip} (${city}, ${country})`);
@@ -1275,25 +1309,63 @@ app.post("/api/visit", async (req, res) => {
           <h3>New Visitor Recorded</h3>
           <p><strong>Time:</strong> ${new Date().toLocaleString()}</p>
           <p><strong>IP Address:</strong> ${ip}</p>
-          <p><strong>Estimated Location:</strong> ${city}, ${region}, ${country}</p>
-          <p><strong>Network / ISP:</strong> ${isp}</p>
+          <p><strong>Location:</strong> ${city}, ${region}, ${country}</p>
+          <p><strong>ISP:</strong> ${isp}</p>
+          <p><strong>Device:</strong> ${userAgent}</p>
           <p><strong>Referrer:</strong> ${referrer}</p>
-          <p><strong>Screen:</strong> ${screenResolution}</p>
-          <p><strong>Language:</strong> ${language}</p>
-          <p><strong>Entry Path:</strong> ${path}</p>
-          <p><strong>User Agent:</strong> ${userAgent}</p>
-          <br/>
-          <p><a href="https://aravindhprabu.me/admin/visitors" style="display:inline-block;padding:10px 15px;background-color:#7c3aed;color:white;text-decoration:none;border-radius:8px;font-weight:bold;">View in Admin Panel</a></p>
-        `
+          <p><strong>Entry Route:</strong> ${path}</p>
+          <p><strong>Platform:</strong> ${platform || "Unknown"}</p>
+          <p><strong>Visitor Type:</strong> ${visitorType || "New"}</p>
+          <p>
+            <a href="http://aravindhprabu.me/admin/visitors" style="display:inline-block;padding:10px 15px;background-color:#0284c7;color:white;text-decoration:none;border-radius:4px;">
+              View Logs
+            </a>
+          </p>
+        `,
       });
-      console.log("✓ Visitor email notification sent successfully.");
-    } catch (mailErr) {
-      console.error("Failed to send visitor email notification:", mailErr.message);
+      console.log("✓ Visitor notification email sent via Resend!");
+    } catch (emailErr) {
+      console.error("✗ Failed to send visitor email notification:", emailErr.message);
     }
 
     res.status(201).json({ success: true, data: visitor });
   } catch (error) {
     console.error("Error logging visitor:", error.message);
+    res.status(500).json({ error: "Internal Server Error", details: error.message });
+  }
+});
+
+// POST visitor event tracker (heartbeat/clicks/pageviews transitions)
+app.post("/api/visit/event", async (req, res) => {
+  try {
+    const { sessionId, eventType, data } = req.body;
+    if (!sessionId) {
+      return res.status(400).json({ error: "Session ID required" });
+    }
+
+    const visitor = await Visitor.findOne({ sessionId });
+    if (!visitor) {
+      return res.status(404).json({ error: "Session not found" });
+    }
+
+    if (eventType === "click") {
+      const { elementId, label } = data;
+      visitor.clicks.push({ elementId, label, clickedAt: new Date() });
+    } else if (eventType === "pageview") {
+      const { path, duration, maxScrollDepth } = data;
+      const pageView = [...visitor.pageViews].reverse().find(pv => pv.path === path);
+      if (pageView) {
+        pageView.duration = (pageView.duration || 0) + duration;
+      }
+      if (maxScrollDepth !== undefined && maxScrollDepth > visitor.maxScrollDepth) {
+        visitor.maxScrollDepth = maxScrollDepth;
+      }
+    }
+
+    await visitor.save();
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Error logging visitor event:", error.message);
     res.status(500).json({ error: "Internal Server Error", details: error.message });
   }
 });

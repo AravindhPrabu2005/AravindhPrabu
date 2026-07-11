@@ -287,6 +287,35 @@ export default function AdminVisitors() {
                                 </div>
                             </div>
 
+                            {/* Section: Visitor Type & Scroll Depth */}
+                            <div className="space-y-3">
+                                <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Engagement Metrics</h4>
+                                <div className="bg-slate-50 rounded-xl p-4 border border-slate-200/60 space-y-3.5">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-xs text-slate-500 font-medium">Visitor Type</span>
+                                        <span className={`text-[10px] font-bold uppercase px-2.5 py-0.5 rounded-full border ${
+                                            selectedVisitor.visitorType === "Returning" 
+                                                ? "bg-emerald-50 text-emerald-700 border-emerald-200" 
+                                                : "bg-indigo-50 text-indigo-700 border-indigo-200"
+                                        }`}>
+                                            {selectedVisitor.visitorType || "New Visitor"}
+                                        </span>
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <div className="flex items-center justify-between text-xs text-slate-500 font-medium">
+                                            <span>Max Scroll Depth</span>
+                                            <span className="font-bold text-slate-800">{selectedVisitor.maxScrollDepth || 0}%</span>
+                                        </div>
+                                        <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
+                                            <div 
+                                                className="h-full bg-indigo-650 rounded-full transition-all duration-500" 
+                                                style={{ width: `${selectedVisitor.maxScrollDepth || 0}%` }}
+                                            ></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             {/* Section: IP & Location */}
                             <div className="space-y-3">
                                 <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Network & Location</h4>
@@ -371,6 +400,24 @@ export default function AdminVisitors() {
                                         </span>
                                     </div>
                                     <div className="flex items-center justify-between">
+                                        <span className="text-xs text-slate-500 font-medium">Browser Vendor</span>
+                                        <span className="text-xs font-semibold text-slate-800">
+                                            {selectedVisitor.browserVendor || "Unknown"}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-xs text-slate-500 font-medium">Rendering Engine</span>
+                                        <span className="text-xs font-mono font-semibold text-slate-800">
+                                            {selectedVisitor.renderingEngine || "Unknown"}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-xs text-slate-500 font-medium">Platform / OS</span>
+                                        <span className="text-xs font-semibold text-slate-800">
+                                            {selectedVisitor.platform || "Unknown"}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center justify-between">
                                         <span className="text-xs text-slate-500 font-medium">Screen Resolution</span>
                                         <span className="text-xs font-mono font-semibold text-slate-800">
                                             {selectedVisitor.screenResolution || "Unknown"}
@@ -382,8 +429,69 @@ export default function AdminVisitors() {
                                             {selectedVisitor.language || "Unknown"}
                                         </span>
                                     </div>
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-xs text-slate-500 font-medium">Cookies Enabled</span>
+                                        <span className="text-xs font-semibold text-slate-800">
+                                            {selectedVisitor.cookieSupport !== undefined 
+                                                ? (selectedVisitor.cookieSupport ? "Yes" : "No") 
+                                                : "Unknown"}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-xs text-slate-500 font-medium">Touchscreen Support</span>
+                                        <span className="text-xs font-semibold text-slate-800">
+                                            {selectedVisitor.touchSupport !== undefined 
+                                                ? (selectedVisitor.touchSupport ? "Yes" : "No") 
+                                                : "Unknown"}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-xs text-slate-500 font-medium">Network Connection</span>
+                                        <span className="text-xs font-mono font-semibold text-slate-800 truncate max-w-[240px]" title={selectedVisitor.networkType}>
+                                            {selectedVisitor.networkType || "Unknown"}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
+
+                            {/* Section: Campaign UTM Parameters */}
+                            {selectedVisitor.utmParams && (selectedVisitor.utmParams.source || selectedVisitor.utmParams.medium || selectedVisitor.utmParams.campaign) && (
+                                <div className="space-y-3">
+                                    <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Campaign UTM Parameters</h4>
+                                    <div className="bg-slate-50 rounded-xl p-4 border border-slate-200/60 space-y-3">
+                                        {selectedVisitor.utmParams.source && (
+                                            <div className="flex items-center justify-between text-xs">
+                                                <span className="text-slate-500 font-medium">Source</span>
+                                                <span className="font-semibold text-slate-800 bg-white border border-slate-200 px-2 py-0.5 rounded">{selectedVisitor.utmParams.source}</span>
+                                            </div>
+                                        )}
+                                        {selectedVisitor.utmParams.medium && (
+                                            <div className="flex items-center justify-between text-xs">
+                                                <span className="text-slate-500 font-medium">Medium</span>
+                                                <span className="font-semibold text-slate-800 bg-white border border-slate-200 px-2 py-0.5 rounded">{selectedVisitor.utmParams.medium}</span>
+                                            </div>
+                                        )}
+                                        {selectedVisitor.utmParams.campaign && (
+                                            <div className="flex items-center justify-between text-xs">
+                                                <span className="text-slate-500 font-medium">Campaign</span>
+                                                <span className="font-semibold text-slate-800 bg-white border border-slate-200 px-2 py-0.5 rounded">{selectedVisitor.utmParams.campaign}</span>
+                                            </div>
+                                        )}
+                                        {selectedVisitor.utmParams.term && (
+                                            <div className="flex items-center justify-between text-xs">
+                                                <span className="text-slate-500 font-medium">Term</span>
+                                                <span className="font-semibold text-slate-800 bg-white border border-slate-200 px-2 py-0.5 rounded">{selectedVisitor.utmParams.term}</span>
+                                            </div>
+                                        )}
+                                        {selectedVisitor.utmParams.content && (
+                                            <div className="flex items-center justify-between text-xs">
+                                                <span className="text-slate-500 font-medium">Content</span>
+                                                <span className="font-semibold text-slate-800 bg-white border border-slate-200 px-2 py-0.5 rounded">{selectedVisitor.utmParams.content}</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Section: Referrer & Navigation */}
                             <div className="space-y-3">
@@ -447,7 +555,8 @@ export default function AdminVisitors() {
                                                             {pv.path || "/"}
                                                         </span>
                                                         <span className="text-[10px] text-slate-400 font-medium">
-                                                            {formatTimestamp(pv.visitedAt)}
+                                                            Visited at: {formatTimestamp(pv.visitedAt)}
+                                                            {pv.duration > 0 && ` • Active for ${pv.duration}s`}
                                                         </span>
                                                     </div>
                                                 </div>
@@ -456,6 +565,36 @@ export default function AdminVisitors() {
                                     </div>
                                 </div>
                             )}
+
+                            {/* Section: Click Interactions Log */}
+                            <div className="space-y-3">
+                                <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Button Clicks & Interactions</h4>
+                                <div className="bg-slate-50 rounded-xl p-4 border border-slate-200/60 max-h-[160px] overflow-y-auto">
+                                    {selectedVisitor.clicks && selectedVisitor.clicks.length > 0 ? (
+                                        <div className="relative border-l-2 border-emerald-200 pl-4 space-y-4 ml-1.5 py-1">
+                                            {selectedVisitor.clicks.map((click, idx) => (
+                                                <div key={idx} className="relative text-xs">
+                                                    {/* Dot */}
+                                                    <span className="absolute -left-[21.5px] top-1.5 w-2 h-2 rounded-full bg-emerald-500 border border-white"></span>
+                                                    <div className="flex flex-col gap-0.5">
+                                                        <span className="font-semibold text-slate-800">
+                                                            Clicked: <span className="font-bold text-emerald-700 bg-emerald-50 border border-emerald-100 px-1.5 py-0.5 rounded text-[10px] uppercase">{click.label}</span>
+                                                        </span>
+                                                        <code className="text-[10px] text-slate-500 font-mono">
+                                                            ID: {click.elementId || "generic_click"}
+                                                        </code>
+                                                        <span className="text-[9px] text-slate-400 font-medium">
+                                                            {formatTimestamp(click.clickedAt)}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <span className="text-xs text-slate-400 italic block text-center py-2">No button clicks logged in this session</span>
+                                    )}
+                                </div>
+                            </div>
 
                             {/* Section: User Agent */}
                             <div className="space-y-3">
