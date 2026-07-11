@@ -595,9 +595,11 @@ export default function AdminVisitors() {
                                                         <span className="font-semibold text-slate-800">
                                                             Clicked: <span className="font-bold text-emerald-700 bg-emerald-50 border border-emerald-100 px-1.5 py-0.5 rounded text-[10px] uppercase">{click.label}</span>
                                                         </span>
-                                                        <code className="text-[10px] text-slate-500 font-mono">
-                                                            ID: {click.elementId || "generic_click"}
-                                                        </code>
+                                                        {click.elementId && click.elementId !== "generic_click" && (
+                                                            <code className="text-[10px] text-slate-500 font-mono">
+                                                                ID: {click.elementId}
+                                                            </code>
+                                                        )}
                                                         <span className="text-[9px] text-slate-400 font-medium">
                                                             {formatTimestamp(click.clickedAt)}
                                                         </span>

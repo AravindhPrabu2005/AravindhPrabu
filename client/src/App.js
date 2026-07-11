@@ -273,7 +273,7 @@ function LayoutWrapper() {
         if (!target) return;
 
         let elementId = target.id || target.getAttribute("name") || "";
-        let label = target.innerText.trim() || target.getAttribute("aria-label") || "";
+        let label = target.innerText.trim() || target.getAttribute("aria-label") || target.getAttribute("title") || "";
         const href = target.getAttribute("href") || "";
 
         if (href.includes("github.com")) {
@@ -285,12 +285,43 @@ function LayoutWrapper() {
         } else if (href.includes("leetcode.com")) {
           elementId = elementId || "leetcode_link";
           label = label || "LeetCode Link";
-        } else if (href.includes("Resume") || target.innerText.toLowerCase().includes("resume")) {
+        } else if (href.includes("Resume") || target.innerText.toLowerCase().includes("resume") || (target.getAttribute("title") && target.getAttribute("title").toLowerCase().includes("resume"))) {
           elementId = elementId || "resume_link";
           label = label || "Resume Download/Request";
         } else if (target.type === "submit" && target.closest("form")) {
           elementId = elementId || "submit_button";
           label = label || "Form Submit Button";
+        }
+
+        // Normalize basic labels
+        if (!label) {
+          if (href) {
+            label = "Link Click";
+          } else {
+            label = "Button Click";
+          }
+        }
+
+        // Project / Heading context extraction
+        let context = "";
+        const parentCard = target.closest(".project-card, [class*='card'], article, section, div.group");
+        if (parentCard) {
+          const heading = parentCard.querySelector("h1, h2, h3, h4");
+          if (heading) {
+            context = heading.innerText.trim();
+          }
+        }
+
+        if (context) {
+          label = `${label} (${context})`;
+        // eslint-disable-next-line no-script-url
+        } else if (href && !href.startsWith("#") && !href.startsWith("javascript:")) {
+          try {
+            const urlObj = new URL(href, window.location.origin);
+            label = `${label} [${urlObj.hostname}${urlObj.pathname.substring(0, 30)}]`;
+          } catch(e) {
+            label = `${label} [${href.substring(0, 40)}]`;
+          }
         }
 
         if (elementId || label) {
