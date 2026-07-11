@@ -238,7 +238,8 @@ function LayoutWrapper() {
       
       reportVisit();
 
-      // Scroll event tracker
+      // Scroll event tracker (debounced to avoid database spam)
+      let scrollTimeout;
       const handleScroll = () => {
         const scrollTop = window.scrollY || document.documentElement.scrollTop;
         const scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
@@ -246,6 +247,21 @@ function LayoutWrapper() {
           const pct = Math.round((scrollTop / scrollHeight) * 100);
           if (pct > maxScrollDepthRef.current) {
             maxScrollDepthRef.current = Math.min(pct, 100);
+            
+            // Debounce server update to 2 seconds
+            clearTimeout(scrollTimeout);
+            scrollTimeout = setTimeout(() => {
+              const duration = Math.round((Date.now() - pageLoadTimeRef.current) / 1000);
+              axiosInstance.post("/api/visit/event", {
+                sessionId,
+                eventType: "pageview",
+                data: {
+                  path: location.pathname,
+                  duration,
+                  maxScrollDepth: maxScrollDepthRef.current
+                }
+              }).catch(() => {});
+            }, 2000);
           }
         }
       };
@@ -290,9 +306,35 @@ function LayoutWrapper() {
       };
       document.addEventListener("click", handleGlobalClick);
 
+      // Visibility Change event tracker (tab close or hidden page)
+      const handleVisibilityChange = () => {
+        if (document.visibilityState === 'hidden') {
+          const duration = Math.round((Date.now() - pageLoadTimeRef.current) / 1000);
+          const payload = {
+            sessionId,
+            eventType: "pageview",
+            data: {
+              path: location.pathname,
+              duration,
+              maxScrollDepth: maxScrollDepthRef.current
+            }
+          };
+          const apiUrl = axiosInstance.defaults.baseURL || "";
+          fetch(`${apiUrl}/api/visit/event`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+            keepalive: true
+          }).catch(() => {});
+        }
+      };
+      document.addEventListener("visibilitychange", handleVisibilityChange);
+
       return () => {
+        clearTimeout(scrollTimeout);
         window.removeEventListener("scroll", handleScroll);
         document.removeEventListener("click", handleGlobalClick);
+        document.removeEventListener("visibilitychange", handleVisibilityChange);
       };
     }
   }, [location.pathname]);
