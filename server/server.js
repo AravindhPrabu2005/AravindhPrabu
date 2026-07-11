@@ -1403,6 +1403,21 @@ app.delete("/api/visitors/:id", requireAuth, async (req, res) => {
   }
 });
 
+// POST bulk delete visitor logs
+app.post("/api/visitors/bulk-delete", requireAuth, async (req, res) => {
+  try {
+    const { ids } = req.body;
+    if (!ids || !Array.isArray(ids)) {
+      return res.status(400).json({ error: "IDs array required" });
+    }
+    await Visitor.deleteMany({ _id: { $in: ids } });
+    res.json({ success: true, message: `${ids.length} visitor logs deleted successfully` });
+  } catch (error) {
+    console.error("Error bulk deleting visitor logs:", error.message);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 
 
 app.listen(PORT, () => {

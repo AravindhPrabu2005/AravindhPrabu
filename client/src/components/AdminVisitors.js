@@ -6,6 +6,7 @@ export default function AdminVisitors() {
     const [visitors, setVisitors] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedVisitor, setSelectedVisitor] = useState(null);
+    const [selectedIds, setSelectedIds] = useState([]);
 
     const fetchVisitors = () => {
         axiosInstance.get("/api/visitors")
@@ -23,31 +24,37 @@ export default function AdminVisitors() {
         fetchVisitors();
     }, []);
 
-    const handleDelete = async (id) => {
-        if (window.confirm("Are you sure you want to delete this visitor log entry?")) {
-            try {
-                await axiosInstance.delete(`/api/visitors/${id}`);
-                fetchVisitors();
-                if (selectedVisitor && selectedVisitor._id === id) {
-                    setSelectedVisitor(null);
-                }
-            } catch (error) {
-                console.error("Error deleting visitor log:", error);
-            }
+    const handleSelectAll = (e) => {
+        if (e.target.checked) {
+            setSelectedIds(visitors.map(v => v._id));
+        } else {
+            setSelectedIds([]);
         }
     };
 
-    /* const handleClearAll = async () => {
-        if (window.confirm("WARNING: Are you sure you want to delete ALL visitor logs? This action cannot be undone.")) {
+    const handleSelectRow = (id) => {
+        setSelectedIds(prev => 
+            prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+        );
+    };
+
+    const handleBulkDelete = async () => {
+        if (selectedIds.length === 0) return;
+        if (window.confirm(`Are you sure you want to delete the ${selectedIds.length} selected visitor log entries?`)) {
             try {
-                await axiosInstance.delete("/api/visitors");
-                fetchVisitors();
-                setSelectedVisitor(null);
+                const res = await axiosInstance.post("/api/visitors/bulk-delete", { ids: selectedIds });
+                if (res.data.success) {
+                    setSelectedIds([]);
+                    fetchVisitors();
+                    if (selectedVisitor && selectedIds.includes(selectedVisitor._id)) {
+                        setSelectedVisitor(null);
+                    }
+                }
             } catch (error) {
-                console.error("Error clearing visitor logs:", error);
+                console.error("Error bulk deleting visitor logs:", error);
             }
         }
-    }; */
+    };
 
     const formatTimestamp = (isoString) => {
         if (!isoString) return "N/A";
@@ -145,15 +152,15 @@ export default function AdminVisitors() {
                                 <p className="text-xs text-slate-500">Logged session visits: {visitors.length}</p>
                             </div>
                         </div>
-                        {/* {visitors.length > 0 && (
+                        {selectedIds.length > 0 && (
                             <button
-                                onClick={handleClearAll}
-                                className="flex items-center justify-center gap-2 px-4 py-2.5 bg-red-50 hover:bg-red-100 text-red-650 hover:text-red-700 border border-red-100 rounded-xl text-xs font-semibold transition-all duration-300 active:scale-95 cursor-pointer"
+                                onClick={handleBulkDelete}
+                                className="flex items-center justify-center gap-2 px-4 py-2.5 bg-red-55 hover:bg-red-100 text-red-600 hover:text-red-700 border border-red-100 rounded-xl text-xs font-semibold transition-all duration-300 active:scale-95 cursor-pointer shadow-xs animate-fadeIn"
                             >
-                                <FaTrashAlt />
-                                <span>Clear All Logs</span>
+                                <FaTrash size={12} />
+                                <span>Delete Selected ({selectedIds.length})</span>
                             </button>
-                        )} */}
+                        )}
                     </div>
 
                     {visitors.length === 0 ? (
@@ -167,16 +174,33 @@ export default function AdminVisitors() {
                                 <table className="w-full border-collapse">
                                     <thead>
                                         <tr className="bg-slate-50 border-b border-slate-200/80 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                            <th className="px-6 py-4 text-center w-12">
+                                                <input 
+                                                    type="checkbox" 
+                                                    checked={visitors.length > 0 && selectedIds.length === visitors.length}
+                                                    onChange={handleSelectAll}
+                                                    className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer w-4 h-4"
+                                                />
+                                            </th>
                                             <th className="px-6 py-4">Date & Time</th>
                                             <th className="px-6 py-4">Location & ISP</th>
                                             <th className="px-6 py-4">Referrer / Entry</th>
                                             <th className="px-6 py-4 text-center">Session Details</th>
-                                            <th className="px-6 py-4 text-center">Action</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-100 text-sm">
                                         {visitors.map((visitor) => (
                                             <tr key={visitor._id} className="hover:bg-slate-50/40 transition-colors duration-200">
+                                                {/* Checkbox Select */}
+                                                <td className="px-6 py-4 whitespace-nowrap text-center">
+                                                    <input 
+                                                        type="checkbox" 
+                                                        checked={selectedIds.includes(visitor._id)}
+                                                        onChange={() => handleSelectRow(visitor._id)}
+                                                        className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer w-4 h-4"
+                                                    />
+                                                </td>
+
                                                 {/* Date & Time */}
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                      <div className="flex flex-col gap-1 text-slate-600">
@@ -240,17 +264,6 @@ export default function AdminVisitors() {
                                                     >
                                                         <FaEye size={12} />
                                                         <span>View Details</span>
-                                                    </button>
-                                                </td>
-
-                                                {/* Action */}
-                                                <td className="px-6 py-4 whitespace-nowrap text-center">
-                                                    <button
-                                                        onClick={() => handleDelete(visitor._id)}
-                                                        className="p-2 bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 border border-red-100 rounded-lg transition-all duration-300 active:scale-95 cursor-pointer"
-                                                        title="Delete entry"
-                                                    >
-                                                        <FaTrash size={12} />
                                                     </button>
                                                 </td>
                                             </tr>
