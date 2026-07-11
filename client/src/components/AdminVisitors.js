@@ -7,6 +7,34 @@ export default function AdminVisitors() {
     const [loading, setLoading] = useState(true);
     const [selectedVisitor, setSelectedVisitor] = useState(null);
     const [selectedIds, setSelectedIds] = useState([]);
+    const [tempName, setTempName] = useState("");
+    const [updatingName, setUpdatingName] = useState(false);
+
+    useEffect(() => {
+        if (selectedVisitor) {
+            setTempName(selectedVisitor.name || "");
+        } else {
+            setTempName("");
+        }
+    }, [selectedVisitor]);
+
+    const handleUpdateName = async () => {
+        if (!selectedVisitor) return;
+        setUpdatingName(true);
+        try {
+            const res = await axiosInstance.put(`/api/visitors/${selectedVisitor._id}/name`, { name: tempName });
+            if (res.data.success) {
+                setVisitors(prev => prev.map(v => v._id === selectedVisitor._id ? { ...v, name: tempName } : v));
+                setSelectedVisitor(prev => ({ ...prev, name: tempName }));
+                alert("Visitor name updated successfully!");
+            }
+        } catch (err) {
+            console.error("Failed to update name:", err);
+            alert("Failed to update visitor name.");
+        } finally {
+            setUpdatingName(false);
+        }
+    };
 
     const fetchVisitors = () => {
         axiosInstance.get("/api/visitors")
@@ -229,13 +257,18 @@ export default function AdminVisitors() {
                                                 {/* Location & ISP */}
                                                 <td className="px-6 py-4">
                                                     <div className="space-y-1">
-                                                        <div className="flex items-center gap-1.5">
+                                                        <div className="flex flex-wrap items-center gap-1.5">
                                                             <span className="font-semibold text-slate-800">
                                                                 {visitor.city || "Unknown City"}
                                                             </span>
                                                             <span className="text-[10px] font-semibold text-indigo-650 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded-full">
                                                                 {visitor.country || "Unknown Country"}
                                                             </span>
+                                                            {visitor.name && (
+                                                                <span className="px-2 py-0.5 bg-purple-50 text-purple-700 border border-purple-200 rounded text-[10px] font-bold" title={`Identified as: ${visitor.name}`}>
+                                                                    👤 {visitor.name}
+                                                                </span>
+                                                            )}
                                                         </div>
                                                         <div className="flex items-center gap-1 text-[10px] text-slate-450">
                                                             <FaNetworkWired size={10} className="text-slate-400" />
@@ -282,9 +315,16 @@ export default function AdminVisitors() {
                     <div className="bg-white w-full max-w-lg rounded-2xl border border-slate-200 shadow-2xl flex flex-col overflow-hidden animate-slideUp">
                         {/* Header */}
                         <div className="bg-slate-50/80 px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-                            <div className="flex items-center gap-2 text-indigo-600 font-semibold">
-                                <FaLaptop size={16} />
-                                <span>Visitor Session Details</span>
+                            <div className="flex flex-col gap-0.5">
+                                <div className="flex items-center gap-2 text-indigo-600 font-semibold">
+                                    <FaLaptop size={16} />
+                                    <span>Visitor Session Details</span>
+                                </div>
+                                {selectedVisitor.name && (
+                                    <span className="text-[10px] text-slate-500 font-semibold pl-6">
+                                        Identified as: <span className="text-indigo-650 font-bold">{selectedVisitor.name}</span>
+                                    </span>
+                                )}
                             </div>
                             <button
                                 onClick={() => setSelectedVisitor(null)}
@@ -296,6 +336,26 @@ export default function AdminVisitors() {
 
                         {/* Body */}
                         <div className="p-6 overflow-y-auto space-y-5 max-h-[75vh]">
+                            {/* Section: Custom Visitor Identity */}
+                            <div className="space-y-3">
+                                <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Visitor Identity</h4>
+                                <div className="bg-slate-50 rounded-xl p-4 border border-slate-200/60 flex items-center gap-3">
+                                    <input
+                                        type="text"
+                                        value={tempName}
+                                        onChange={(e) => setTempName(e.target.value)}
+                                        placeholder="Assign custom name (e.g. Google Recruiter)..."
+                                        className="flex-1 text-xs px-3 py-2 bg-white border border-slate-200 focus:border-indigo-400 rounded-lg focus:outline-none transition-colors"
+                                    />
+                                    <button
+                                        onClick={handleUpdateName}
+                                        disabled={updatingName}
+                                        className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 text-white rounded-lg text-xs font-bold transition-colors cursor-pointer"
+                                    >
+                                        {updatingName ? "Saving..." : "Save"}
+                                    </button>
+                                </div>
+                            </div>
                             {/* Section: Visit Timestamps */}
                             <div className="space-y-3">
                                 <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Session Timestamps</h4>

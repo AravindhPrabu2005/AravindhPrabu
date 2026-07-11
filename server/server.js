@@ -1145,6 +1145,7 @@ app.delete("/api/experiences/:id", requireAuth, async (req, res) => {
 
 const visitorSchema = new mongoose.Schema({
   sessionId: { type: String, index: true },
+  name: { type: String, default: "" },
   ip: String,
   country: String,
   city: String,
@@ -1414,6 +1415,25 @@ app.post("/api/visitors/bulk-delete", requireAuth, async (req, res) => {
     res.json({ success: true, message: `${ids.length} visitor logs deleted successfully` });
   } catch (error) {
     console.error("Error bulk deleting visitor logs:", error.message);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+// PUT update visitor name
+app.put("/api/visitors/:id/name", requireAuth, async (req, res) => {
+  try {
+    const { name } = req.body;
+    const visitor = await Visitor.findByIdAndUpdate(
+      req.params.id,
+      { name: name || "" },
+      { new: true }
+    );
+    if (!visitor) {
+      return res.status(404).json({ error: "Visitor log not found" });
+    }
+    res.json({ success: true, message: "Visitor name updated successfully", data: visitor });
+  } catch (error) {
+    console.error("Error updating visitor name:", error.message);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
