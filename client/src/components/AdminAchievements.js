@@ -198,6 +198,65 @@ export default function AdminAchievements() {
         }
     };
 
+    const renderAchievementGrid = (items, emptyMsg) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {items.map((ach) => (
+                <div 
+                    key={ach._id}
+                    className="bg-white border border-slate-200/80 rounded-2xl overflow-hidden hover:border-slate-355 shadow-xs transition-all flex flex-col group"
+                >
+                    <div className="relative h-44 overflow-hidden bg-slate-50/50 flex justify-center items-center p-4">
+                        <img 
+                            src={ach.certificate} 
+                            alt={ach.title} 
+                            className="max-h-full max-w-full object-contain transform group-hover:scale-105 transition-transform duration-300"
+                        />
+                        <span className={`absolute top-3 left-3 px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 shadow-xs border ${ach.type === 1 ? 'bg-purple-50 text-purple-700 border-purple-200/60' : 'bg-pink-50 text-pink-700 border-pink-200/60'}`}>
+                            {ach.type === 1 ? "Hackathon" : "Competition"}
+                        </span>
+                    </div>
+
+                    <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
+                        <div className="space-y-2">
+                            <h3 className="text-base font-bold text-slate-800 leading-tight">{ach.title}</h3>
+                            
+                            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-slate-50 border border-slate-200 text-slate-650 rounded-md text-[10px] font-semibold">
+                                <FaTrophy className="text-slate-500" /> {ach.position}
+                            </div>
+                            
+                            <p className="text-xs text-slate-500 line-clamp-3 leading-relaxed pt-1">{ach.description}</p>
+                        </div>
+
+                        <div className="flex items-center justify-end border-t border-slate-100 pt-4">
+                            <div className="flex items-center gap-2">
+                                <button 
+                                    onClick={() => openEditModal(ach)}
+                                    className="p-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 hover:text-indigo-700 rounded-lg border border-indigo-100 transition-all cursor-pointer"
+                                    aria-label="Edit achievement"
+                                >
+                                    <FaEdit size={12} />
+                                </button>
+                                <button 
+                                    onClick={() => handleDelete(ach._id)}
+                                    className="p-2 bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 rounded-lg border border-red-100 transition-all cursor-pointer"
+                                    aria-label="Delete achievement"
+                                >
+                                    <FaTrash size={12} />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            ))}
+
+            {items.length === 0 && (
+                <div className="col-span-full py-16 text-center text-slate-500 border border-dashed border-slate-200 rounded-2xl bg-white shadow-xs">
+                    {emptyMsg}
+                </div>
+            )}
+        </div>
+    );
+
     return (
         <div className="w-full space-y-6">
             {/* Header section */}
@@ -241,62 +300,16 @@ export default function AdminAchievements() {
                 </div>
             )}
 
-            {/* Achievements Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {achievements.map((ach) => (
-                    <div 
-                        key={ach._id}
-                        className="bg-white border border-slate-200/80 rounded-2xl overflow-hidden hover:border-slate-355 shadow-xs transition-all flex flex-col group"
-                    >
-                        <div className="relative h-44 overflow-hidden bg-slate-50/50 flex justify-center items-center p-4">
-                            <img 
-                                src={ach.certificate} 
-                                alt={ach.title} 
-                                className="max-h-full max-w-full object-contain transform group-hover:scale-105 transition-transform duration-300"
-                            />
-                            <span className={`absolute top-3 left-3 px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 shadow-xs border ${ach.type === 1 ? 'bg-purple-50 text-purple-700 border-purple-200/60' : 'bg-pink-50 text-pink-700 border-pink-200/60'}`}>
-                                {ach.type === 1 ? "Hackathon" : "Competition"}
-                            </span>
-                        </div>
+            {/* Hackathons Section */}
+            <div className="space-y-3">
+                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider pl-1">Hackathons</h3>
+                {renderAchievementGrid(achievements.filter(ach => ach.type === 1), "No hackathons found.")}
+            </div>
 
-                        <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
-                            <div className="space-y-2">
-                                <h3 className="text-base font-bold text-slate-800 leading-tight">{ach.title}</h3>
-                                
-                                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-slate-50 border border-slate-200 text-slate-650 rounded-md text-[10px] font-semibold">
-                                    <FaTrophy className="text-slate-500" /> {ach.position}
-                                </div>
-                                
-                                <p className="text-xs text-slate-500 line-clamp-3 leading-relaxed pt-1">{ach.description}</p>
-                            </div>
-
-                            <div className="flex items-center justify-end border-t border-slate-100 pt-4">
-                                <div className="flex items-center gap-2">
-                                    <button 
-                                        onClick={() => openEditModal(ach)}
-                                        className="p-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 hover:text-indigo-700 rounded-lg border border-indigo-100 transition-all cursor-pointer"
-                                        aria-label="Edit achievement"
-                                    >
-                                        <FaEdit size={12} />
-                                    </button>
-                                    <button 
-                                        onClick={() => handleDelete(ach._id)}
-                                        className="p-2 bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 rounded-lg border border-red-100 transition-all cursor-pointer"
-                                        aria-label="Delete achievement"
-                                    >
-                                        <FaTrash size={12} />
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                ))}
-
-                {achievements.length === 0 && (
-                    <div className="col-span-full py-16 text-center text-slate-500 border border-dashed border-slate-200 rounded-2xl bg-white shadow-xs">
-                        No achievements found. Click "Add Achievement" to create one.
-                    </div>
-                )}
+            {/* Competitions Section */}
+            <div className="space-y-3 pt-4">
+                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider pl-1">Competitions</h3>
+                {renderAchievementGrid(achievements.filter(ach => ach.type === 2), "No competitions found.")}
             </div>
 
             {/* Modal Dialog */}
