@@ -22,12 +22,19 @@ export default function AdminAchievements() {
 
     // Reordering states
     const [reorderModalOpen, setReorderModalOpen] = useState(false);
+    const [reorderType, setReorderType] = useState(1); // 1 = Hackathons, 2 = Competitions
     const [tempAchievements, setTempAchievements] = useState([]);
     const [draggedIndex, setDraggedIndex] = useState(null);
 
     const openReorderModal = () => {
-        setTempAchievements([...achievements].sort((a, b) => (a.order || 0) - (b.order || 0)));
+        setReorderType(1);
+        setTempAchievements(achievements.filter(a => a.type === 1).sort((a, b) => (a.order || 0) - (b.order || 0)));
         setReorderModalOpen(true);
+    };
+
+    const handleReorderTypeChange = (type) => {
+        setReorderType(type);
+        setTempAchievements(achievements.filter(a => a.type === type).sort((a, b) => (a.order || 0) - (b.order || 0)));
     };
 
     const handleDragStart = (e, index) => {
@@ -432,6 +439,32 @@ export default function AdminAchievements() {
                             </button>
                         </div>
 
+                        {/* Reorder Tabs */}
+                        <div className="flex border-b border-slate-100 bg-slate-50/50 p-2 gap-2">
+                            <button
+                                type="button"
+                                onClick={() => handleReorderTypeChange(1)}
+                                className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                                    reorderType === 1
+                                        ? "bg-white text-indigo-600 shadow-sm border border-slate-200"
+                                        : "text-slate-550 hover:text-slate-850 hover:bg-slate-100"
+                                }`}
+                            >
+                                Hackathons
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => handleReorderTypeChange(2)}
+                                className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                                    reorderType === 2
+                                        ? "bg-white text-indigo-600 shadow-sm border border-slate-200"
+                                        : "text-slate-550 hover:text-slate-850 hover:bg-slate-100"
+                                }`}
+                            >
+                                Competitions
+                            </button>
+                        </div>
+
                         {/* Drag and Drop List */}
                         <div className="flex-1 overflow-y-auto p-6 space-y-2 bg-slate-50/30">
                             {tempAchievements.map((ach, idx) => (
@@ -469,7 +502,7 @@ export default function AdminAchievements() {
 
                             {tempAchievements.length === 0 && (
                                 <div className="text-center py-12 text-slate-500 text-xs border border-dashed border-slate-200 rounded-xl bg-white">
-                                    No achievements to reorder.
+                                    No items to reorder in this category.
                                 </div>
                             )}
                         </div>
