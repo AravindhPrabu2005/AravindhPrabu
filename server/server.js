@@ -131,7 +131,8 @@ const achievementSchema = new mongoose.Schema({
   position: { type: String, required: true },
   description: { type: String, required: true },
   certificate: { type: String, required: true },
-  type: { type: Number, required: true }
+  type: { type: Number, required: true },
+  order: { type: Number, default: 0 }
 });
 const Achievement = mongoose.model("Achievement", achievementSchema);
 
@@ -1004,7 +1005,7 @@ app.delete("/api/certifications/:id", requireAuth, async (req, res) => {
 // GET all achievements
 app.get("/api/achievements", async (req, res) => {
   try {
-    const achievements = await Achievement.find();
+    const achievements = await Achievement.find().sort({ order: 1 });
     res.json(achievements);
   } catch (error) {
     res.status(500).json({ error: "Internal Server Error", details: error.message });
@@ -1020,12 +1021,17 @@ app.post("/api/achievements", requireAuth, imageUpload.single("image"), async (r
     }
 
     const imageUrl = await uploadImageToCloudinary(req.file.buffer, "achievements");
+    // Find highest order to place new item at the end
+    const lastAchievement = await Achievement.findOne().sort({ order: -1 });
+    const nextOrder = lastAchievement && lastAchievement.order ? lastAchievement.order + 1 : 1;
+
     const achievement = await Achievement.create({
       title,
       position,
       description,
       type: Number(type),
-      certificate: imageUrl
+      certificate: imageUrl,
+      order: nextOrder
     });
     res.json(achievement);
   } catch (error) {
@@ -1062,6 +1068,29 @@ app.delete("/api/achievements/:id", requireAuth, async (req, res) => {
   try {
     await Achievement.findByIdAndDelete(req.params.id);
     res.json({ success: true, message: "Achievement deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error", details: error.message });
+  }
+});
+
+// PUT reorder achievements
+app.put("/api/achievements/reorder", requireAuth, async (req, res) => {
+  try {
+    const { achievementsOrder } = req.body;
+    if (!Array.isArray(achievementsOrder)) {
+      return res.status(400).json({ error: "achievementsOrder array is required." });
+    }
+
+    const bulkOps = achievementsOrder.map(item => ({
+      updateOne: {
+        filter: { _id: new mongoose.Types.ObjectId(item.id) },
+        update: { $set: { order: item.order } }
+      }
+    }));
+
+    await Achievement.bulkWrite(bulkOps);
+    console.log("✓ Successfully updated achievements order!");
+    res.json({ success: true, message: "Achievements order updated successfully!" });
   } catch (error) {
     res.status(500).json({ error: "Internal Server Error", details: error.message });
   }

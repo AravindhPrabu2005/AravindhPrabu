@@ -220,7 +220,7 @@ const Allprojects = () => {
                 </div>
 
                 {/* Description */}
-                <p className="text-sm text-gray-300 leading-relaxed mb-4 min-h-[64px] line-clamp-3">
+                <p className="whitespace-pre-line text-sm text-gray-300 leading-relaxed mb-4">
                   {project.description}
                 </p>
 

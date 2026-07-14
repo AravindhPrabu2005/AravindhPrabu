@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import axiosInstance from "./axiosInstance";
-import { FaPlus, FaTrash, FaEdit, FaTimes, FaTrophy, FaAward } from "react-icons/fa";
+import { FaPlus, FaTrash, FaEdit, FaTimes, FaTrophy, FaAward, FaSort } from "react-icons/fa";
 
 export default function AdminAchievements() {
     const [achievements, setAchievements] = useState([]);
@@ -19,6 +19,70 @@ export default function AdminAchievements() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [successMessage, setSuccessMessage] = useState("");
+
+    // Reordering states
+    const [reorderModalOpen, setReorderModalOpen] = useState(false);
+    const [tempAchievements, setTempAchievements] = useState([]);
+    const [draggedIndex, setDraggedIndex] = useState(null);
+
+    const openReorderModal = () => {
+        setTempAchievements([...achievements].sort((a, b) => (a.order || 0) - (b.order || 0)));
+        setReorderModalOpen(true);
+    };
+
+    const handleDragStart = (e, index) => {
+        setDraggedIndex(index);
+        e.dataTransfer.effectAllowed = "move";
+        e.dataTransfer.setData("text/plain", index);
+    };
+
+    const handleDragOver = (e, index) => {
+        e.preventDefault();
+        if (draggedIndex === null || draggedIndex === index) return;
+        
+        const items = [...tempAchievements];
+        const draggedItem = items[draggedIndex];
+        
+        items.splice(draggedIndex, 1);
+        items.splice(index, 0, draggedItem);
+        
+        setDraggedIndex(index);
+        setTempAchievements(items);
+    };
+
+    const handleDragEnd = () => {
+        setDraggedIndex(null);
+    };
+
+    const handleDrop = (e) => {
+        e.preventDefault();
+        setDraggedIndex(null);
+    };
+
+    const handleSaveOrder = async () => {
+        setLoading(true);
+        setError("");
+        
+        const achievementsOrder = tempAchievements.map((ach, idx) => ({
+            id: ach._id,
+            order: idx
+        }));
+
+        try {
+            await axiosInstance.put("/api/achievements/reorder", {
+                achievementsOrder
+            });
+            setReorderModalOpen(false);
+            setSuccessMessage("Achievements order updated successfully!");
+            fetchAchievements();
+        } catch (err) {
+            console.error("Error saving achievements order:", err);
+            setError("Failed to save achievements order.");
+        } finally {
+            setLoading(false);
+            setTimeout(() => setSuccessMessage(""), 4000);
+        }
+    };
 
     const fetchAchievements = async () => {
         try {
@@ -147,13 +211,22 @@ export default function AdminAchievements() {
                         <p className="text-xs text-slate-500">Configure your competition awards, paper publications, and accomplishments</p>
                     </div>
                 </div>
-                <button
-                    onClick={openCreateModal}
-                    className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-xs shadow-indigo-500/10 hover:shadow-md hover:shadow-indigo-500/20 active:scale-95 transition-all cursor-pointer"
-                >
-                    <FaPlus />
-                    <span>Add Achievement</span>
-                </button>
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={openReorderModal}
+                        className="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-semibold border border-slate-200 shadow-xs active:scale-95 transition-all cursor-pointer"
+                    >
+                        <FaSort />
+                        <span>Reorder Achievements</span>
+                    </button>
+                    <button
+                        onClick={openCreateModal}
+                        className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-xs shadow-indigo-500/10 hover:shadow-md hover:shadow-indigo-500/20 active:scale-95 transition-all cursor-pointer"
+                    >
+                        <FaPlus />
+                        <span>Add Achievement</span>
+                    </button>
+                </div>
             </div>
 
             {/* Notification Banner */}
@@ -325,6 +398,87 @@ export default function AdminAchievements() {
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Reorder Modal Dialog */}
+            {reorderModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-fadeIn">
+                    <div className="bg-white border border-slate-200/80 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col max-h-[85vh]">
+                        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+                            <div>
+                                <h3 className="text-base font-bold text-slate-900">Reorder Achievements</h3>
+                                <p className="text-xs text-slate-500">Drag and drop items to rearrange their rank order</p>
+                            </div>
+                            <button 
+                                onClick={() => setReorderModalOpen(false)}
+                                className="p-1.5 bg-slate-50 hover:bg-slate-100 text-slate-400 hover:text-slate-700 rounded-lg transition-colors cursor-pointer"
+                            >
+                                <FaTimes />
+                            </button>
+                        </div>
+
+                        {/* Drag and Drop List */}
+                        <div className="flex-1 overflow-y-auto p-6 space-y-2 bg-slate-50/30">
+                            {tempAchievements.map((ach, idx) => (
+                                <div
+                                    key={ach._id}
+                                    draggable={true}
+                                    onDragStart={(e) => handleDragStart(e, idx)}
+                                    onDragOver={(e) => handleDragOver(e, idx)}
+                                    onDragEnd={handleDragEnd}
+                                    onDrop={handleDrop}
+                                    className={`flex items-center gap-4 p-3 bg-white border border-slate-200 rounded-xl shadow-xs transition-all cursor-grab active:cursor-grabbing select-none ${
+                                        draggedIndex === idx 
+                                            ? "opacity-40 bg-indigo-50/30 border-dashed border-indigo-300 shadow-none scale-98"
+                                            : "hover:border-slate-350 hover:shadow-sm"
+                                    }`}
+                                >
+                                    <div className="text-slate-400 hover:text-slate-700 p-1 flex items-center justify-center">
+                                        <FaSort className="w-4 h-4" />
+                                    </div>
+                                    
+                                    <div className="w-12 h-12 rounded-lg overflow-hidden bg-slate-100 border border-slate-200 flex-shrink-0 flex items-center justify-center">
+                                        <img src={ach.certificate} alt={ach.title} className="w-full h-full object-contain" />
+                                    </div>
+
+                                    <div className="flex-1 min-w-0">
+                                        <h4 className="text-sm font-bold text-slate-800 truncate">{ach.title}</h4>
+                                        <p className="text-[10px] text-slate-450 truncate">{ach.position}</p>
+                                    </div>
+
+                                    <div className="flex-shrink-0 px-2.5 py-1 bg-indigo-50 border border-indigo-100 rounded-md text-[10px] font-bold text-indigo-600">
+                                        #{idx + 1}
+                                    </div>
+                                </div>
+                            ))}
+
+                            {tempAchievements.length === 0 && (
+                                <div className="text-center py-12 text-slate-500 text-xs border border-dashed border-slate-200 rounded-xl bg-white">
+                                    No achievements to reorder.
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Footer Buttons */}
+                        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-100 bg-slate-50/35">
+                            <button
+                                type="button"
+                                onClick={() => setReorderModalOpen(false)}
+                                className="px-4 py-2.5 bg-white hover:bg-slate-50 text-slate-650 hover:text-slate-800 border border-slate-200 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleSaveOrder}
+                                disabled={loading}
+                                className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl text-xs shadow-sm shadow-indigo-500/10 hover:shadow-md hover:shadow-indigo-500/20 transition-all disabled:opacity-50 cursor-pointer"
+                            >
+                                {loading ? "Saving Order..." : "Save Order"}
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

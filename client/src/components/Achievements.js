@@ -153,7 +153,7 @@ const Achievements = () => {
                 {item.position}
               </p>
             </div>
-            <p className="text-sm text-gray-300 leading-relaxed min-h-[48px] line-clamp-3">{item.description}</p>
+            <p className="whitespace-pre-line text-sm text-gray-300 leading-relaxed">{item.description}</p>
           </div>
         </div>
       ))}
