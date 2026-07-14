@@ -103,7 +103,7 @@ const Achievements = () => {
   }, []);
 
   const hackathons = achievements.filter(item => item.type === 1);
-  const otherAchievements = achievements.filter(item => item.type === 2);
+  const competitions = achievements.filter(item => item.type === 2);
 
   const openModal = (image) => {
     setModalImage(image);
@@ -188,18 +188,18 @@ const Achievements = () => {
         {renderCards(hackathons)}
       </div>
 
-      {/* Other Achievements Section */}
+      {/* Competitions Section */}
       <div className="relative w-full max-w-7xl">
         <div className="mb-8">
           <h2 className="text-3xl font-bold text-white mb-2 flex items-center justify-center gap-3">
             <svg className="w-8 h-8 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
             </svg>
-            Other Achievements
+            Competitions
           </h2>
           <div className="w-24 h-1 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full mx-auto"></div>
         </div>
-        {renderCards(otherAchievements)}
+        {renderCards(competitions)}
       </div>
 
       {/* Image Modal */}

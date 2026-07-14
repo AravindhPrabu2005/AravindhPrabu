@@ -255,7 +255,7 @@ export default function AdminAchievements() {
                                 className="max-h-full max-w-full object-contain transform group-hover:scale-105 transition-transform duration-300"
                             />
                             <span className={`absolute top-3 left-3 px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 shadow-xs border ${ach.type === 1 ? 'bg-purple-50 text-purple-700 border-purple-200/60' : 'bg-pink-50 text-pink-700 border-pink-200/60'}`}>
-                                {ach.type === 1 ? "Hackathon" : "Award / Paper"}
+                                {ach.type === 1 ? "Hackathon" : "Competition"}
                             </span>
                         </div>
 
@@ -347,8 +347,8 @@ export default function AdminAchievements() {
                                     onChange={(e) => setType(Number(e.target.value))}
                                     className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-all shadow-inner"
                                 >
-                                    <option value={1}>Hackathon / Competition</option>
-                                    <option value={2}>Paper Publication / Other Award</option>
+                                    <option value={1}>Hackathon</option>
+                                    <option value={2}>Competition</option>
                                 </select>
                             </div>
 
